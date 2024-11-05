@@ -24,14 +24,17 @@ class MainWindow(QWidget):
         # Input fields
         self.username_field = QLineEdit()
         self.username_field.setPlaceholderText("Username")
+        self.username_field.setFixedWidth(200)
         layout.addWidget(self.username_field, alignment = Qt.AlignCenter)
 
         self.email_field = QLineEdit()
         self.email_field.setPlaceholderText("Email")
+        self.email_field.setFixedWidth(200)
         layout.addWidget(self.email_field, alignment = Qt.AlignCenter)
 
         self.phone_field = QLineEdit()
         self.phone_field.setPlaceholderText("Phone")
+        self.phone_field.setFixedWidth(200)
         layout.addWidget(self.phone_field, alignment = Qt.AlignCenter)
         
         layout.addSpacing(20)
@@ -40,6 +43,7 @@ class MainWindow(QWidget):
         done_button = QPushButton("Done")
         done_button.setStyleSheet("background-color: #3D5AFE; color: white; font-weight: bold; padding: 8px;")
         done_button.clicked.connect(self.on_done)
+        done_button.setFixedWidth(200)
         layout.addWidget(done_button, alignment = Qt.AlignCenter)
 
     def on_done(self):
