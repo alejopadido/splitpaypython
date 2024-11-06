@@ -1,11 +1,14 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from ui.components.title_label import TitleLabel
 from ui.components.subtitle_label import SubtitleLabel
 from ui.components.input_field import InputField
-from ui.components.done_button import DoneButton
+from ui.components.filled_button import FilledButton
 
 class WelcomeScreen(QWidget):
+    # Define a custom signal for requesting navigation
+    navigate_to_group_overview = pyqtSignal()
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("SplitPay")
@@ -34,9 +37,11 @@ class WelcomeScreen(QWidget):
         layout.addSpacing(20)
 
         # Done button
-        done_button = DoneButton("Done", self.on_done)
+        done_button = FilledButton("Done", self.on_done)
         layout.addWidget(done_button, alignment=Qt.AlignCenter)
 
     def on_done(self):
         # Placeholder for what to do when "Done" is clicked
         print("User Info Submitted:", self.username_field.text(), self.email_field.text(), self.phone_field.text())
+        
+        self.navigate_to_group_overview.emit()
