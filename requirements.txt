@@ -1,1 +1,2 @@
-pyqt5
+pip install pyqt5
+pip install cx_Oracle
