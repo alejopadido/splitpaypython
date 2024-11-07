@@ -3,9 +3,12 @@ from ui.components.title_label import TitleLabel
 from ui.components.member_table import MemberTable
 from ui.components.action_buttons import ActionButtons
 from ui.components.filled_button import FilledButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 
 class GroupOverviewScreen(QWidget):
+    # Define a custom signal for requesting navigation to the create bill screen
+    navigate_to_create_bill = pyqtSignal()
+
     def __init__(self):
         super().__init__()
 
@@ -29,6 +32,6 @@ class GroupOverviewScreen(QWidget):
         create_bill_button = FilledButton('Create Bill', self.on_create_bill)
         layout.addWidget(create_bill_button, alignment=Qt.AlignCenter)
 
-    # Define the callback function to be called when the button is clicked
+    # Emit the signal to navigate to the create bill screen
     def on_create_bill(self):
-        print('Create Bill Button Pressed!')
+        self.navigate_to_create_bill.emit()

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 
@@ -7,6 +7,8 @@ class MemberTable(QTableWidget):
         super().__init__(4, 2)  # For now, 4 rows and 2 columns
         self.setHorizontalHeaderLabels(["Members", "Debt"])
         self.setStyleSheet("background-color: #f0f0ff; border-radius: 10px;")
+        
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
         # Add demo data
         members = ["Gladis Osorio", "Gloria Eugenia", "Elkin Mosquera", "Antonio Vivaldi"]

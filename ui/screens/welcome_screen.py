@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
 from ui.components.title_label import TitleLabel
 from ui.components.subtitle_label import SubtitleLabel
-from ui.components.input_field import InputField
+from ui.components.input_field import InputField    
 from ui.components.filled_button import FilledButton
 
 class WelcomeScreen(QWidget):
