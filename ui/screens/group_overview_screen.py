@@ -18,7 +18,7 @@ class GroupOverviewScreen(QWidget):
 
         # Title Label
         title = TitleLabel("Hello Kitty Army")
-        layout.addWidget(title)
+        layout.addWidget(title, alignment=Qt.AlignCenter)
 
         # Member Table
         member_table = MemberTable()
