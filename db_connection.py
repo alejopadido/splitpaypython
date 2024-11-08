@@ -1,11 +1,16 @@
+import os
 import cx_Oracle
 
+# Add Oracle Instant Client path to environment variable
+os.environ["PATH"] = r"C:\Users\alejo\dev\instantclient_23_6;" + os.environ["PATH"]
+
+
 # Database connection settings
-HOST = "your_host"
-PORT = "your_port"
-SERVICE_NAME = "your_service_name"
-USER = "IS150403"
-PASSWORD = "your_password"
+HOST = "orion.javeriana.edu.co"
+PORT = "1521"
+SERVICE_NAME = "LAB"
+USER = "isdb55"
+PASSWORD = "FNfc#wtqZ#ZJD04"
 
 def get_connection():
     """
@@ -13,9 +18,11 @@ def get_connection():
     """
     dsn = cx_Oracle.makedsn(HOST, PORT, service_name=SERVICE_NAME)
     connection = cx_Oracle.connect(user=USER, password=PASSWORD, dsn=dsn)
+    if connection != None: print('Connection successful!')
     return connection
 
 def check_user_exists(username, email, phone):
+    print('Username: ' + username + " Email: " + email + " Phone: " + phone)
     """
     Check if a user exists in the database.
     Returns True if the user exists, otherwise False.
@@ -24,16 +31,27 @@ def check_user_exists(username, email, phone):
     try:
         # Establish the database connection
         connection = get_connection()
-        cursor = connection.cursor()
+        if connection:
+            print('Connected to the database')
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1 FROM dual")
+            result = cursor.fetchone()
+            print("Basic Test Query Result:", result)  # Should print: (1,)
+
+        
+        cursor.execute('SELECT * FROM "IS150403"."User"')
+        tables = cursor.fetchall()
+        print("Existing Users:", tables)
 
         # Query to check if the user exists
         query = """
             SELECT * FROM "User"
-            WHERE NAME = :username AND EMAIL = :email AND PHONE = :phone
         """
-        cursor.execute(query, {"username": username, "email": email, "phone": phone})
+        # cursor.execute(query, {"username": username, "email": email, "phone": phone})
+        cursor.execute(query)
+        
         result = cursor.fetchone()
-
+        print('Login result: ', result)
         # If a result is found, the user exists
         return result is not None
 
