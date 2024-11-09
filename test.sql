@@ -87,3 +87,4 @@ FROM "User" u
 JOIN user_group ug ON u.userid = ug.userid
 JOIN "Group" g ON ug.groupid = g.groupid
 WHERE u.name = :username;
+
