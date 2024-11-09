@@ -90,6 +90,7 @@ def get_user_groups(username):
         if connection:
             connection.close()
 
+# Get all the members of a group
 def get_group_members(group_id):
     """
     Get the list of members of a specific group by group_id.

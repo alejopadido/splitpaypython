@@ -1,10 +1,3 @@
--- Generado por Oracle SQL Developer Data Modeler 23.1.0.087.0806
---   en:        2024-11-05 07:14:33 COT
---   sitio:      Oracle Database 11g
---   tipo:      Oracle Database 11g
-
-
-
 DROP TABLE bill CASCADE CONSTRAINTS;
 
 DROP TABLE "Group" CASCADE CONSTRAINTS;
@@ -100,11 +93,17 @@ ALTER TABLE "User" ADD CONSTRAINT user_pk PRIMARY KEY ( userid );
 
 CREATE TABLE user_bill (
     userid NUMBER NOT NULL,
-    billid NUMBER NOT NULL
+    billid NUMBER NOT NULL,
+    percentage NUMBER NOT NULL
 );
 
-ALTER TABLE user_bill ADD CONSTRAINT user_bill_pk PRIMARY KEY ( userid,
-                                                                billid );
+ALTER TABLE user_bill ADD CONSTRAINT user_bill_pk PRIMARY KEY (userid, billid);
+
+-- Constraint to ensure the percentage is between 0 and 100
+ALTER TABLE user_bill ADD CONSTRAINT user_bill_percentage_chk
+    CHECK (percentage >= 0 AND percentage <= 100);
+
+
 
 CREATE TABLE user_group (
     userid      NUMBER NOT NULL,
@@ -166,46 +165,78 @@ ALTER TABLE user_group
         REFERENCES "User" ( userid );
 
 
+-- INSERTS
+INSERT INTO "User" (USERID, NAME, EMAIL, PAYPALUSERNAME, PHONE)
+VALUES (0, 'Alejandro', 'alejo@email.com', 'alejopaypal', '3186064342');
 
--- Informe de Resumen de Oracle SQL Developer Data Modeler: 
--- 
--- CREATE TABLE                             7
--- CREATE INDEX                             0
--- ALTER TABLE                             22
--- CREATE VIEW                              0
--- ALTER VIEW                               0
--- CREATE PACKAGE                           0
--- CREATE PACKAGE BODY                      0
--- CREATE PROCEDURE                         0
--- CREATE FUNCTION                          0
--- CREATE TRIGGER                           0
--- ALTER TRIGGER                            0
--- CREATE COLLECTION TYPE                   0
--- CREATE STRUCTURED TYPE                   0
--- CREATE STRUCTURED TYPE BODY              0
--- CREATE CLUSTER                           0
--- CREATE CONTEXT                           0
--- CREATE DATABASE                          0
--- CREATE DIMENSION                         0
--- CREATE DIRECTORY                         0
--- CREATE DISK GROUP                        0
--- CREATE ROLE                              0
--- CREATE ROLLBACK SEGMENT                  0
--- CREATE SEQUENCE                          0
--- CREATE MATERIALIZED VIEW                 0
--- CREATE MATERIALIZED VIEW LOG             0
--- CREATE SYNONYM                           0
--- CREATE TABLESPACE                        0
--- CREATE USER                              0
--- 
--- DROP TABLESPACE                          0
--- DROP DATABASE                            0
--- 
--- REDACTION POLICY                         0
--- 
--- ORDS DROP SCHEMA                         0
--- ORDS ENABLE SCHEMA                       0
--- ORDS ENABLE OBJECT                       0
--- 
--- ERRORS                                   1
--- WARNINGS                                 1
+INSERT INTO "User" (USERID, NAME, EMAIL, PAYPALUSERNAME, PHONE)
+VALUES (1, 'Sebastian', 'sebas@email.com', 'sebaspaypal', '3100000000');
+
+commit;
+
+-- DEMO INSERTS FOR TESTING PURPOSES
+-- Insert sample data into "Group" table
+INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
+(1, 'Finance Group', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 'active');
+
+INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
+(2, 'Travel Group', TO_DATE('2024-02-15', 'YYYY-MM-DD'), 'stopped');
+
+INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
+(3, 'Study Group', TO_DATE('2024-03-10', 'YYYY-MM-DD'), 'ended');
+
+-- Insert sample data into "User" table
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(3, 'Alice', 'alice@example.com', 'alice_paypal', '1234567890');
+
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(4, 'Bob', 'bob@example.com', 'bob_paypal', '0987654321');
+
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(5, 'Charlie', 'charlie@example.com', 'charlie_paypal', '1122334455');
+
+-- Insert sample data into "bill" table
+INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
+(1, 'Hotel Payment', 500, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Pending', 'New York', NULL, 2, 'Lodging', 'Group trip expense');
+
+INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
+(2, 'Dinner', 150, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Approved', 'Los Angeles', NULL, 2, 'Food', 'Business dinner');
+
+INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
+(3, 'Supplies', 80, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Paid', NULL, NULL, 1, 'Office', 'Monthly office supplies');
+
+-- Insert sample data into "notification" table
+INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
+(1, 'E', 'Payment due', TO_DATE('2024-01-15', 'YYYY-MM-DD'), 1);
+
+INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
+(2, 'N', 'New bill available', TO_DATE('2024-01-20', 'YYYY-MM-DD'), 3);
+
+INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
+(3, 'E', 'Reminder for meeting', TO_DATE('2024-02-05', 'YYYY-MM-DD'), 0);
+
+-- Insert sample data into "transaction" table
+INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
+(1, 500, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Hotel reimbursement', 1, 0, 'approved', 2, 1);
+
+INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
+(2, 150, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Dinner reimbursement', 0, 1, 'pending', 2, 2);
+
+INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
+(3, 80, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Supplies reimbursement', 3, 1, 'approved', 1, 3);
+
+-- Insert sample data into "user_bill" table
+-- Insert sample data into "user_bill" table
+INSERT INTO user_bill (userid, billid, percentage) VALUES (1, 1, 50);  -- User 1 owes 50% of Bill 1
+INSERT INTO user_bill (userid, billid, percentage) VALUES (0, 2, 100); -- User 0 owes 100% of Bill 2
+INSERT INTO user_bill (userid, billid, percentage) VALUES (3, 3, 25);  -- User 3 owes 25% of Bill 3
+
+-- Insert sample data into "user_group" table
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(1, 1, 'active', 'No debt', 'Y');
+
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(0, 2, 'active', 'Indebted', 'N');
+
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(3, 3, 'offline', 'Paid', 'N');
