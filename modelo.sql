@@ -197,13 +197,13 @@ INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES
 
 -- Insert sample data into "bill" table
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
-(1, 'Hotel Payment', 500, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Pending', 'New York', NULL, 2, 'Lodging', 'Group trip expense');
+(1, 'Finance Group Meeting Expenses', 500, TO_DATE('2024-01-10', 'YYYY-MM-DD'), 'Pending', 'New York', NULL, 1, 'Business', 'Meeting and accommodation costs');
 
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
-(2, 'Dinner', 150, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Approved', 'Los Angeles', NULL, 2, 'Food', 'Business dinner');
+(2, 'Travel Group Trip Expenses', 150, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Pending', 'Los Angeles', NULL, 2, 'Travel', 'Shared travel and food expenses');
 
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
-(3, 'Supplies', 80, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Paid', NULL, NULL, 1, 'Office', 'Monthly office supplies');
+(3, 'Study Group Stationery Purchase', 80, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Pending', 'Online', NULL, 3, 'Office', 'Books and other stationery items');
 
 -- Insert sample data into "notification" table
 INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
@@ -216,20 +216,35 @@ INSERT INTO notification (notificationid, type, message, "date", touserid) VALUE
 (3, 'E', 'Reminder for meeting', TO_DATE('2024-02-05', 'YYYY-MM-DD'), 0);
 
 -- Insert sample data into "transaction" table
+-- Alejandro paid his share for Bill 1
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(1, 500, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Hotel reimbursement', 1, 0, 'approved', 2, 1);
+(1, 250, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Payment for Finance Group - Bill 1', 0, 1, 'approved', 1, 1);
 
+-- Sebastian paid part of his share for Bill 2
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(2, 150, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Dinner reimbursement', 0, 1, 'pending', 2, 2);
+(2, 100, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Partial Payment for Travel Group - Bill 2', 1, 0, 'approved', 2, 2);
 
+-- Sebastian has a remaining payment for Bill 2
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(3, 80, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Supplies reimbursement', 3, 1, 'approved', 1, 3);
+(3, 50, TO_DATE('2024-02-15', 'YYYY-MM-DD'), 'Remaining Payment for Travel Group - Bill 2', 1, 0, 'approved', 2, 2);
+
+-- Alice paid her share for Bill 3
+INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
+(4, 20, TO_DATE('2024-03-01', 'YYYY-MM-DD'), 'Payment for Study Group - Bill 3', 3, 0, 'approved', 3, 3);
+
 
 -- Insert sample data into "user_bill" table
--- Insert sample data into "user_bill" table
-INSERT INTO user_bill (userid, billid, percentage) VALUES (1, 1, 50);  -- User 1 owes 50% of Bill 1
-INSERT INTO user_bill (userid, billid, percentage) VALUES (0, 2, 100); -- User 0 owes 100% of Bill 2
-INSERT INTO user_bill (userid, billid, percentage) VALUES (3, 3, 25);  -- User 3 owes 25% of Bill 3
+-- Alejandro (User 0) owes 50% of Bill 1
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(0, 1, 50);
+
+-- Sebastian (User 1) owes 100% of Bill 2
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(1, 2, 100);
+
+-- Alice (User 3) owes 25% of Bill 3
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(3, 3, 25);
 
 -- Insert sample data into "user_group" table
 INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
@@ -240,3 +255,5 @@ INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES
 
 INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
 (3, 3, 'offline', 'Paid', 'N');
+
+commit;
