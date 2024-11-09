@@ -40,23 +40,24 @@ def main():
                 # Open group functionality
                 group_id = input("Enter the Group ID you want to open: ")
 
-                # Get and display group members before showing other options
-                members = db_connection.get_group_members(group_id)
+                # Get and display group members' debts and payment status
+                members = db_connection.get_group_member_debts(group_id)
                 if members:
-                    print(f"Members of Group ID: {group_id}\n")
+                    print(f"Members of Group ID: {group_id} and their financial details:\n")
                     for member in members:
-                        print(f"User ID: {member[0]}, Name: {member[1]}, Email: {member[2]}\n")
+                        print(f"Name: {member[0]}, Total Debt: {member[1]}, Total Paid: {member[2]}, "
+                              f"Payment Status: {member[3]}, Percentage Paid: {member[4]}%\n")
                 else:
-                    print("No members found in this group.\n")
+                    print("No financial details available for this group.\n")
 
                 # Secondary options menu for group actions
                 while True:
                     print(f"Options for Group ID: {group_id}")
                     print('''
-        0. Back
-        1. See transactions
-        2. Manage bills
-        3. Add bill
+            0. Back
+            1. See transactions
+            2. Manage bills
+            3. Add bill
                     ''')
                     group_option = input(': ')
 

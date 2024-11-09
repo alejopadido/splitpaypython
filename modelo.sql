@@ -174,86 +174,87 @@ VALUES (1, 'Sebastian', 'sebas@email.com', 'sebaspaypal', '3100000000');
 
 commit;
 
--- DEMO INSERTS FOR TESTING PURPOSES
--- Insert sample data into "Group" table
+--! DEMO INSERTS FOR TESTING PURPOSES
+--* Group
 INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
 (1, 'Finance Group', TO_DATE('2024-01-01', 'YYYY-MM-DD'), 'active');
-
 INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
-(2, 'Travel Group', TO_DATE('2024-02-15', 'YYYY-MM-DD'), 'stopped');
-
+(2, 'Travel Group', TO_DATE('2024-02-15', 'YYYY-MM-DD'), 'active');
 INSERT INTO "Group" (groupid, name, createddate, status) VALUES 
-(3, 'Study Group', TO_DATE('2024-03-10', 'YYYY-MM-DD'), 'ended');
+(3, 'Study Group', TO_DATE('2024-03-10', 'YYYY-MM-DD'), 'active');
 
--- Insert sample data into "User" table
+--* User
 INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
-(3, 'Alice', 'alice@example.com', 'alice_paypal', '1234567890');
-
+(0, 'Alejandro', 'alejo@example.com', 'alejopaypal', '3186064342');
 INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
-(4, 'Bob', 'bob@example.com', 'bob_paypal', '0987654321');
-
+(1, 'Sebastian', 'sebastian@example.com', 'sebaspaypal', '3100000000');
 INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
-(5, 'Charlie', 'charlie@example.com', 'charlie_paypal', '1122334455');
+(2, 'Maria', 'maria@example.com', 'mariapaypal', '3102223344');
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(3, 'Alice', 'alice@example.com', 'alicepaypal', '1234567890');
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(4, 'Bob', 'bob@example.com', 'bobpaypal', '0987654321');
+INSERT INTO "User" (userid, name, email, paypalusername, phone) VALUES 
+(5, 'Charlie', 'charlie@example.com', 'charliepaypal', '1122334455');
 
--- Insert sample data into "bill" table
+--* Bill
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
 (1, 'Finance Group Meeting Expenses', 500, TO_DATE('2024-01-10', 'YYYY-MM-DD'), 'Pending', 'New York', NULL, 1, 'Business', 'Meeting and accommodation costs');
-
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
-(2, 'Travel Group Trip Expenses', 150, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Pending', 'Los Angeles', NULL, 2, 'Travel', 'Shared travel and food expenses');
-
+(2, 'Travel Group Trip Expenses', 600, TO_DATE('2024-01-15', 'YYYY-MM-DD'), 'Pending', 'Los Angeles', NULL, 2, 'Travel', 'Shared travel and food expenses');
 INSERT INTO bill (billid, title, amount, "date", status, location, receiptimage, groupid, type, comments) VALUES 
-(3, 'Study Group Stationery Purchase', 80, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Pending', 'Online', NULL, 3, 'Office', 'Books and other stationery items');
+(3, 'Study Group Stationery Purchase', 200, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Pending', 'Online', NULL, 3, 'Office', 'Books and other stationery items');
 
--- Insert sample data into "notification" table
-INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
-(1, 'E', 'Payment due', TO_DATE('2024-01-15', 'YYYY-MM-DD'), 1);
-
-INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
-(2, 'N', 'New bill available', TO_DATE('2024-01-20', 'YYYY-MM-DD'), 3);
-
-INSERT INTO notification (notificationid, type, message, "date", touserid) VALUES 
-(3, 'E', 'Reminder for meeting', TO_DATE('2024-02-05', 'YYYY-MM-DD'), 0);
-
--- Insert sample data into "transaction" table
--- Alejandro paid his share for Bill 1
+--* Transaction
+--? Alejandro paid his share for Bill 1
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
 (1, 250, TO_DATE('2024-01-20', 'YYYY-MM-DD'), 'Payment for Finance Group - Bill 1', 0, 1, 'approved', 1, 1);
-
--- Sebastian paid part of his share for Bill 2
+--? Maria paid part of her share for Bill 2
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(2, 100, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Partial Payment for Travel Group - Bill 2', 1, 0, 'approved', 2, 2);
-
--- Sebastian has a remaining payment for Bill 2
+(2, 150, TO_DATE('2024-02-05', 'YYYY-MM-DD'), 'Partial Payment for Travel Group - Bill 2', 2, 0, 'approved', 2, 2);
+--? Bob paid his share for Bill 2
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(3, 50, TO_DATE('2024-02-15', 'YYYY-MM-DD'), 'Remaining Payment for Travel Group - Bill 2', 1, 0, 'approved', 2, 2);
-
--- Alice paid her share for Bill 3
+(3, 100, TO_DATE('2024-02-10', 'YYYY-MM-DD'), 'Payment for Travel Group - Bill 2', 4, 0, 'approved', 2, 2);
+--? Alice paid her share for Bill 3
 INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, groupid, billid) VALUES 
-(4, 20, TO_DATE('2024-03-01', 'YYYY-MM-DD'), 'Payment for Study Group - Bill 3', 3, 0, 'approved', 3, 3);
+(4, 50, TO_DATE('2024-03-01', 'YYYY-MM-DD'), 'Payment for Study Group - Bill 3', 3, 0, 'approved', 3, 3);
 
-
--- Insert sample data into "user_bill" table
--- Alejandro (User 0) owes 50% of Bill 1
+--* User Bill
+--? Alejandro (User 0) owes 50% of Bill 1
 INSERT INTO user_bill (userid, billid, percentage) VALUES 
 (0, 1, 50);
-
--- Sebastian (User 1) owes 100% of Bill 2
+--? Sebastian (User 1) owes 50% of Bill 1
 INSERT INTO user_bill (userid, billid, percentage) VALUES 
-(1, 2, 100);
-
--- Alice (User 3) owes 25% of Bill 3
+(1, 1, 50);
+--? Maria (User 2) owes 25% of Bill 2
 INSERT INTO user_bill (userid, billid, percentage) VALUES 
-(3, 3, 25);
+(2, 2, 25);
+--? Bob (User 4) owes 25% of Bill 2
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(4, 2, 25);
+--? Alice (User 3) owes 50% of Bill 3
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(3, 3, 50);
+--? Charlie (User 5) owes 50% of Bill 3
+INSERT INTO user_bill (userid, billid, percentage) VALUES 
+(5, 3, 50);
 
--- Insert sample data into "user_group" table
+--* User Group
+--? Finance Group
 INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
-(1, 1, 'active', 'No debt', 'Y');
+(0, 1, 'active', 'Indebted', 'Y');
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(1, 1, 'active', 'Indebted', 'N');
+--? Travel Group
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(2, 2, 'active', 'Indebted', 'Y');
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(4, 2, 'active', 'Indebted', 'N');
+--? Study Group
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(3, 3, 'active', 'Paid', 'Y');
+INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
+(5, 3, 'active', 'Paid', 'N');
 
-INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
-(0, 2, 'active', 'Indebted', 'N');
-
-INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
-(3, 3, 'offline', 'Paid', 'N');
 
 commit;

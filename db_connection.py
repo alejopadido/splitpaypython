@@ -128,3 +128,68 @@ def get_group_members(group_id):
         # Close the connection if it was established
         if connection:
             connection.close()
+
+# Gets each group member debt information
+def get_group_member_debts(group_id):
+    """
+    Get the list of members of a specific group and their debt details.
+    Returns a list of members with their name, total debt, total paid, payment status, and percentage paid.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the financial details of the members of the group
+        query = """
+        WITH user_total_debt AS (
+            SELECT u.userid,
+                   u.name,
+                   b.groupid,
+                   SUM(b.amount * (ub.percentage / 100)) AS total_debt
+            FROM user_bill ub
+            JOIN bill b ON ub.billid = b.billid
+            JOIN "User" u ON ub.userid = u.userid
+            WHERE b.groupid = :group_id
+            GROUP BY u.userid, u.name, b.groupid
+        ),
+        user_total_paid AS (
+            SELECT t.payerid AS userid,
+                   b.groupid,
+                   SUM(t.amount) AS total_paid
+            FROM transaction t
+            JOIN bill b ON t.billid = b.billid
+            WHERE t.status = 'approved' AND b.groupid = :group_id
+            GROUP BY t.payerid, b.groupid
+        )
+        SELECT utd.name,
+               utd.total_debt,
+               NVL(utp.total_paid, 0) AS total_paid,
+               CASE 
+                   WHEN NVL(utp.total_paid, 0) >= utd.total_debt THEN 'Paid'
+                   ELSE 'Indebted'
+               END AS payment_status,
+               ROUND((NVL(utp.total_paid, 0) / utd.total_debt) * 100, 2) AS percentage_paid
+        FROM user_total_debt utd
+        LEFT JOIN user_total_paid utp ON utd.userid = utp.userid AND utd.groupid = utp.groupid
+        """
+
+        # Execute the query using parameterized input
+        cursor.execute(query, {"group_id": group_id})
+
+        # Fetch all results
+        members_debts = cursor.fetchall()
+
+        # Return the list of members' debt details (each item is a tuple)
+        return members_debts
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return []
+
+    finally:
+        # Close the connection if it was established
+        if connection:
+            connection.close()

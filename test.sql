@@ -17,6 +17,7 @@ JOIN "User" u ON ub.userid = u.userid
 WHERE b.groupid = :group_id
 GROUP BY u.name, b.groupid;
 
+-- Gets the deb status of each user in a determined group, name, groupId, totalDebt, totalPaid, paymentStatus, percentagePaid
 WITH user_total_debt AS (
     SELECT u.userid,
            u.name,
