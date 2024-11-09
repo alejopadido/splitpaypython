@@ -37,9 +37,47 @@ def main():
                     print("User is not part of any groups.")
 
             elif option == '2':
-                # Placeholder for "Open group" functionality
+                # Open group functionality
                 group_id = input("Enter the Group ID you want to open: ")
-                print(f"Opening details for Group ID: {group_id} (functionality not implemented yet)")
+
+                # Get and display group members before showing other options
+                members = db_connection.get_group_members(group_id)
+                if members:
+                    print(f"Members of Group ID: {group_id}\n")
+                    for member in members:
+                        print(f"User ID: {member[0]}, Name: {member[1]}, Email: {member[2]}\n")
+                else:
+                    print("No members found in this group.\n")
+
+                # Secondary options menu for group actions
+                while True:
+                    print(f"Options for Group ID: {group_id}")
+                    print('''
+        0. Back
+        1. See transactions
+        2. Manage bills
+        3. Add bill
+                    ''')
+                    group_option = input(': ')
+
+                    if group_option == '0':
+                        # Go back to the main menu
+                        break
+
+                    elif group_option == '1':
+                        # Placeholder for "See transactions"
+                        print(f"Displaying transactions for Group ID: {group_id} (functionality not implemented yet)")
+
+                    elif group_option == '2':
+                        # Placeholder for "Manage bills"
+                        print(f"Managing bills for Group ID: {group_id} (functionality not implemented yet)")
+
+                    elif group_option == '3':
+                        # Placeholder for "Add bill"
+                        print(f"Adding a bill for Group ID: {group_id} (functionality not implemented yet)")
+
+                    else:
+                        print("Invalid option. Please try again.")
 
             else:
                 print("Invalid option. Please try again.")

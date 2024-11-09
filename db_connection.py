@@ -19,7 +19,7 @@ def get_connection():
     Establish and return a database connection using cx_Oracle.
     """
     dsn = cx_Oracle.makedsn(HOST, PORT, service_name=SERVICE_NAME)
-    connection = cx_Oracle.connect(user=USER, password=PASSWORD, dsn=dsn)
+    connection = cx_Oracle.connect(user=USER, password=PASSWORD, dsn=dsn)   
     # if connection != None: print('Connection successful!')
     return connection
 
@@ -79,6 +79,44 @@ def get_user_groups(username):
 
         # Return the list of groups (each item is a tuple)
         return groups
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return []
+
+    finally:
+        # Close the connection if it was established
+        if connection:
+            connection.close()
+
+def get_group_members(group_id):
+    """
+    Get the list of members of a specific group by group_id.
+    Returns a list of members (user ID, name, email).
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the list of members for the given group_id
+        query = """
+            SELECT u.userid, u.name, u.email
+            FROM "IS150403"."User" u
+            JOIN "IS150403".user_group ug ON u.userid = ug.userid
+            WHERE ug.groupid = :group_id
+        """
+
+        # Execute the query using parameterized input
+        cursor.execute(query, {"group_id": group_id})
+
+        # Fetch all results
+        members = cursor.fetchall()
+
+        # Return the list of members (each item is a tuple)
+        return members
 
     except cx_Oracle.DatabaseError as e:
         # Log or handle the database error
