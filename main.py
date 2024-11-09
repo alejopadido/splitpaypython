@@ -30,9 +30,9 @@ def main():
                 # Show user's groups
                 groups = db_connection.get_user_groups(username)
                 if groups:
-                    print("User is part of the following groups:")
+                    print("User is part of the following groups:\n")
                     for group in groups:
-                        print(f"Group ID: {group[0]}, Name: {group[1]}, Created Date: {group[2]}, Status: {group[3]}")
+                        print(f"Group ID: {group[0]}\n Name: {group[1]}\n Created Date: {group[2]}\n Status: {group[3]}\n")
                 else:
                     print("User is not part of any groups.")
 
