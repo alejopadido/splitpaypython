@@ -2,7 +2,8 @@ import os
 import cx_Oracle
 
 # Add Oracle Instant Client path to environment variable
-os.environ["PATH"] = r"C:\Users\alejo\dev\instantclient_23_6;" + os.environ["PATH"]
+#os.environ["PATH"] = r"C:\Users\alejo\dev\instantclient_23_6;" + os.environ["PATH"] #Alejo
+os.environ["PATH"] = r"D:\sebastian\DESARROLLO\instantclient_23_6;" + os.environ["PATH"] #Sebas
 
 
 # Database connection settings
