@@ -193,3 +193,74 @@ def get_group_member_debts(group_id):
         # Close the connection if it was established
         if connection:
             connection.close()
+
+# Creates a new bill
+def add_bill(title, amount, bill_date, status, location, group_id, bill_type, comments):
+    """
+    Adds a new bill to the bill table and returns the new bill ID.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Insert new bill (billid will be auto-generated)
+        query = """
+            INSERT INTO bill (title, amount, "date", status, location, groupid, type, comments)
+            VALUES (:title, :amount, TO_DATE(:bill_date, 'YYYY-MM-DD'), :status, :location, :group_id, :bill_type, :comments)
+            RETURNING billid INTO :billid
+        """
+        # Define the variable to capture the generated bill ID
+        bill_id_var = cursor.var(cx_Oracle.NUMBER)
+        # Execute the insert query
+        cursor.execute(query, {
+            "title": title,
+            "amount": amount,
+            "bill_date": bill_date,
+            "status": status,
+            "location": location,
+            "group_id": group_id,
+            "bill_type": bill_type,
+            "comments": comments,
+            "billid": bill_id_var
+        })
+        connection.commit()
+
+        # Return the generated bill ID
+        return bill_id_var.getvalue()[0]
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+        return None
+
+    finally:
+        if connection:
+            connection.close()
+
+# Creates the relation between a user and a bill
+def add_user_bill(userid, billid, percentage):
+    """
+    Adds a user-bill assignment to the user_bill table.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Insert user bill assignment
+        query = """
+            INSERT INTO user_bill (userid, billid, percentage)
+            VALUES (:userid, :billid, :percentage)
+        """
+        cursor.execute(query, {"userid": userid, "billid": billid, "percentage": percentage})
+        connection.commit()
+        print(f"Successfully added user {userid} to bill {billid} with {percentage}% responsibility.")
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+
+    finally:
+        if connection:
+            connection.close()

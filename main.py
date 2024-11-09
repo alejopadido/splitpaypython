@@ -16,9 +16,9 @@ def main():
         while True:
             print('Options')
             print('''
-    0. Exit
-    1. Show my groups
-    2. Open group
+            0. Exit
+            1. Show my groups
+            2. Open group
             ''')
             option = input(': ')
 
@@ -54,10 +54,10 @@ def main():
                 while True:
                     print(f"Options for Group ID: {group_id}")
                     print('''
-            0. Back
-            1. See transactions
-            2. Manage bills
-            3. Add bill
+                    0. Back
+                    1. See transactions
+                    2. Manage bills
+                    3. Add bill
                     ''')
                     group_option = input(': ')
 
@@ -74,8 +74,43 @@ def main():
                         print(f"Managing bills for Group ID: {group_id} (functionality not implemented yet)")
 
                     elif group_option == '3':
-                        # Placeholder for "Add bill"
-                        print(f"Adding a bill for Group ID: {group_id} (functionality not implemented yet)")
+                        # Add bill functionality
+                        members = db_connection.get_group_members(group_id)
+                        if members:
+                            print(f"Members of Group ID: {group_id}:\n")
+                            for member in members:
+                                print(f"User ID: {member[0]}, Name: {member[1]}\n")
+                            
+                            # Prompt user for new bill details
+                            title = input("Enter bill title: ")
+                            amount = float(input("Enter bill amount: "))
+                            date = input("Enter bill date (YYYY-MM-DD): ")
+                            status = input("Enter bill status (Pending/Approved/Debt/Paid): ")
+                            location = input("Enter bill location (optional): ")
+                            type = input("Enter bill type (e.g., Lodging, Food, Office): ")
+                            comments = input("Enter any comments (optional): ")
+
+                            # Add new bill to the database
+                            bill_id = db_connection.add_bill(title, amount, date, status, location, group_id, type, comments)
+                            if bill_id:
+                                print(f"Bill added successfully with Bill ID: {bill_id}\n")
+
+                                # Assign percentages for each member
+                                print("Assign each member's share of the bill (total must be 100%)")
+                                total_percentage = 0
+                                for member in members:
+                                    percentage = float(input(f"Enter percentage for User {member[1]} (User ID: {member[0]}): "))
+                                    total_percentage += percentage
+                                    db_connection.add_user_bill(member[0], bill_id, percentage)
+
+                                if total_percentage == 100:
+                                    print("Bill distribution successfully assigned.\n")
+                                else:
+                                    print("Error: The total assigned percentage does not equal 100%. Please recheck.\n")
+                            else:
+                                print("Error adding bill. Please try again.\n")
+                        else:
+                            print("No members found in this group.\n")
 
                     else:
                         print("Invalid option. Please try again.")
