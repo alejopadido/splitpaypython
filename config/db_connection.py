@@ -9,8 +9,8 @@ os.environ["PATH"] = r"C:\Users\alejo\dev\instantclient_23_6;" + os.environ["PAT
 HOST = "orion.javeriana.edu.co"
 PORT = "1521"
 SERVICE_NAME = "LAB"
-USER = "isdb55"
-PASSWORD = "FNfc#wtqZ#ZJD04"
+USER = "is150403"
+PASSWORD = "eTvw97#g#qyrift"
 
 def get_connection():
     """
@@ -31,21 +31,14 @@ def check_user_exists(username, email, phone):
     try:
         # Establish the database connection
         connection = get_connection()
-        if connection:
-            print('Connected to the database')
-            cursor = connection.cursor()
-            cursor.execute("SELECT 1 FROM dual")
-            result = cursor.fetchone()
-            print("Basic Test Query Result:", result)  # Should print: (1,)
-
-        
+        cursor = connection.cursor()
         cursor.execute('SELECT * FROM "IS150403"."User"')
         tables = cursor.fetchall()
         print("Existing Users:", tables)
 
         # Query to check if the user exists
         query = """
-            SELECT * FROM "User"
+            SELECT * FROM "IS150403"."User"
         """
         # cursor.execute(query, {"username": username, "email": email, "phone": phone})
         cursor.execute(query)

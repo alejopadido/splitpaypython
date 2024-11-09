@@ -1,13 +1,18 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 from ui.main_window import MainWindow
+import config.db_connection as db_connection 
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.resize(700, 400)  # Set window size
-    window.show()            # Display the window
-    sys.exit(app.exec_())    # Run the app
+    # Test login
+    username = 'Alejandro'
+    email = 'alejo@email.com'   
+    phone = '3186064342'
 
+    user_exists = db_connection.check_user_exists(username=username, email=email, phone=phone)
+    print('User exists: ', user_exists) 
+    
+    # Test group overview
+    
 if __name__ == "__main__":
     main()

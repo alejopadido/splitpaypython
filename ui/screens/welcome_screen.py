@@ -4,7 +4,7 @@ from ui.components.title_label import TitleLabel
 from ui.components.subtitle_label import SubtitleLabel
 from ui.components.input_field import InputField
 from ui.components.filled_button import FilledButton
-import db_connection  # Import the database connection module
+import config.db_connection as db_connection  # Import the database connection module
 
 class WelcomeScreen(QWidget):
     # Define a custom signal for requesting navigation
