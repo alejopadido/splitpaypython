@@ -20,6 +20,7 @@ def main():
             1. Show my groups
             2. Open group
             3. Create / manage group
+            4. Member to member transaction
             ''')
             option = input(': ')
 
@@ -143,6 +144,21 @@ def main():
 
                     db_connection.add_user_to_group(user_id, group_id, is_leader)
                     print(f"User {user_id} added to group {group_id}")
+            elif option == '4':
+                # Member to member transaction functionality
+                from_user_id  = input("Enter the User ID of the payer (From): ")
+                to_user_id  = input("Enter the User ID of the payee (To): ")
+                amount = float(input("Enter the amount to transfer: "))
+                clear_all = input("Clear all debt? (y/n): ").lower() == 'y'
+
+                payment_method = input("Choose payment method (Paypal/Cash): ").strip().capitalize()
+
+                # Perform the transaction
+                transaction_success = db_connection.member_to_member_transaction(from_user_id, to_user_id, amount, clear_all, payment_method)
+                if transaction_success:
+                    print(f"Transaction from user ID: {from_user_id} to user ID:{to_user_id} completed successfully!")
+                else:
+                    print("Transaction failed. Please check the details and try again.")
 
             else:
                 print("Invalid option. Please try again.")

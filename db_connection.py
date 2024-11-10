@@ -296,7 +296,7 @@ def create_group(group_name, created_by_userid):
         """, {"user_id": created_by_userid, "group_id": group_id})
         connection.commit()
 
-        print(f"Group '{group_name}' created successfully with Group ID: {group_id}")
+       # print(f"Group '{group_name}' created successfully with Group ID: {group_id}")
         return group_id
 
     except cx_Oracle.DatabaseError as e:
@@ -329,6 +329,68 @@ def add_user_to_group(user_id, group_id, is_leader='N'):
 
     except cx_Oracle.DatabaseError as e:
         print("Database error:", e)
+
+    finally:
+        if connection:
+            connection.close()
+
+def member_to_member_transaction(from_user_id, to_user_id, amount, clear_all, payment_method):
+    """
+    Handles a transaction between two users by user IDs.
+    :param from_user_id: The user ID of the payer.
+    :param to_user_id: The user ID of the payee.
+    :param amount: The amount to be transferred.
+    :param clear_all: Boolean indicating whether to clear all debt.
+    :param payment_method: The selected payment method (PayPal or Cash).
+    :return: Boolean indicating success or failure of the transaction.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Clear all debt or partial payment
+        if clear_all:
+            # Set the transaction amount to the total owed amount if `clear_all` is True
+            cursor.execute("""
+                SELECT SUM(amount) FROM transaction 
+                WHERE payerid = :from_user_id AND payeeid = :to_user_id AND status = 'pending'
+            """, {"from_user_id": from_user_id, "to_user_id": to_user_id})
+            total_debt = cursor.fetchone()[0]
+            amount = total_debt if total_debt else amount  # Use total debt if it exists
+
+        # Insert the transaction into the transaction table
+        query = """
+            INSERT INTO transaction (amount, "date", description, payerid, payeeid, status, payment_method)
+            VALUES (:amount, SYSDATE, :description, :from_user_id, :to_user_id, 'approved', :payment_method)
+        """
+        description = f"Payment from User ID {from_user_id} to User ID {to_user_id} via {payment_method}"
+        cursor.execute(query, {
+            "amount": amount,
+            "description": description,
+            "from_user_id": from_user_id,
+            "to_user_id": to_user_id,
+            "payment_method": payment_method
+        })
+
+        # Update transactions to clear debt if `clear_all` is True
+        if clear_all:
+            cursor.execute("""
+                UPDATE transaction 
+                SET status = 'approved'
+                WHERE payerid = :from_user_id AND payeeid = :to_user_id AND status = 'pending'
+            """, {"from_user_id": from_user_id, "to_user_id": to_user_id})
+            print("All debt cleared.")
+
+        # Commit the transaction
+        connection.commit()
+        print(f"Transaction of {amount} from User ID {from_user_id} to User ID {to_user_id} via {payment_method} was successful.")
+        return True
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+        return False
 
     finally:
         if connection:
