@@ -143,18 +143,7 @@ def get_group_member_debts(group_id):
 
         # Query to get the financial details of the members of the group
         query = """
-        WITH user_total_debt AS (
-            SELECT u.userid,
-                   u.name,
-                   b.groupid,
-                   SUM(b.amount * (ub.percentage / 100)) AS total_debt
-            FROM user_bill ub
-            JOIN bill b ON ub.billid = b.billid
-            JOIN "User" u ON ub.userid = u.userid
-            WHERE b.groupid = :group_id
-            GROUP BY u.userid, u.name, b.groupid
-        ),
-        user_total_paid AS (
+        WITH user_total_paid AS (
             SELECT t.payerid AS userid,
                    b.groupid,
                    SUM(t.amount) AS total_paid
@@ -163,16 +152,18 @@ def get_group_member_debts(group_id):
             WHERE t.status = 'approved' AND b.groupid = :group_id
             GROUP BY t.payerid, b.groupid
         )
-        SELECT utd.name,
-               utd.total_debt,
+        SELECT u.name,
+               get_user_total_debt(u.userid) AS total_debt,
                NVL(utp.total_paid, 0) AS total_paid,
                CASE 
-                   WHEN NVL(utp.total_paid, 0) >= utd.total_debt THEN 'Paid'
+                   WHEN NVL(utp.total_paid, 0) >= get_user_total_debt(u.userid) THEN 'Paid'
                    ELSE 'Indebted'
                END AS payment_status,
-               ROUND((NVL(utp.total_paid, 0) / utd.total_debt) * 100, 2) AS percentage_paid
-        FROM user_total_debt utd
-        LEFT JOIN user_total_paid utp ON utd.userid = utp.userid AND utd.groupid = utp.groupid
+               ROUND((NVL(utp.total_paid, 0) / get_user_total_debt(u.userid)) * 100, 2) AS percentage_paid
+        FROM "User" u
+        JOIN user_group ug ON u.userid = ug.userid
+        LEFT JOIN user_total_paid utp ON u.userid = utp.userid AND ug.groupid = utp.groupid
+        WHERE ug.groupid = :group_id
         """
 
         # Execute the query using parameterized input
@@ -193,6 +184,7 @@ def get_group_member_debts(group_id):
         # Close the connection if it was established
         if connection:
             connection.close()
+
 
 # Creates a new bill
 def add_bill(title, amount, bill_date, status, location, group_id, bill_type, comments):
