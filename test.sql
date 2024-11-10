@@ -49,3 +49,16 @@ SELECT utd.name,
        ROUND((NVL(utp.total_paid, 0) / utd.total_debt) * 100, 2) AS percentage_paid
 FROM user_total_debt utd
 LEFT JOIN user_total_paid utp ON utd.userid = utp.userid AND utd.groupid = utp.groupid;
+
+-- CRUD Operations for Trigger testing
+INSERT INTO bill (title, amount, "date", status, location, groupid, type, comments)
+VALUES ('Test Bill', 100, TO_DATE('2024-12-01', 'YYYY-MM-DD'), 'Pending', 'New York', 1, 'Business', 'Initial bill for testing');
+commit;
+
+UPDATE bill
+SET amount = 150, status = 'Approved'
+WHERE title = 'Test Bill';
+commit;
+
+-- Audit table
+SELECT * FROM billing_audit ORDER BY timestamp DESC;
