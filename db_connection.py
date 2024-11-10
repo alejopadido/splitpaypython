@@ -143,7 +143,18 @@ def get_group_member_debts(group_id):
 
         # Query to get the financial details of the members of the group
         query = """
-        WITH user_total_paid AS (
+        WITH user_total_debt AS (
+            SELECT u.userid,
+                   u.name,
+                   b.groupid,
+                   SUM(b.amount * (ub.percentage / 100)) AS total_debt
+            FROM user_bill ub
+            JOIN bill b ON ub.billid = b.billid
+            JOIN "User" u ON ub.userid = u.userid
+            WHERE b.groupid = :group_id
+            GROUP BY u.userid, u.name, b.groupid
+        ),
+        user_total_paid AS (
             SELECT t.payerid AS userid,
                    b.groupid,
                    SUM(t.amount) AS total_paid
@@ -152,18 +163,16 @@ def get_group_member_debts(group_id):
             WHERE t.status = 'approved' AND b.groupid = :group_id
             GROUP BY t.payerid, b.groupid
         )
-        SELECT u.name,
-               get_user_total_debt(u.userid) AS total_debt,
+        SELECT utd.name,
+               utd.total_debt,
                NVL(utp.total_paid, 0) AS total_paid,
                CASE 
-                   WHEN NVL(utp.total_paid, 0) >= get_user_total_debt(u.userid) THEN 'Paid'
+                   WHEN NVL(utp.total_paid, 0) >= utd.total_debt THEN 'Paid'
                    ELSE 'Indebted'
                END AS payment_status,
-               ROUND((NVL(utp.total_paid, 0) / get_user_total_debt(u.userid)) * 100, 2) AS percentage_paid
-        FROM "User" u
-        JOIN user_group ug ON u.userid = ug.userid
-        LEFT JOIN user_total_paid utp ON u.userid = utp.userid AND ug.groupid = utp.groupid
-        WHERE ug.groupid = :group_id
+               ROUND((NVL(utp.total_paid, 0) / utd.total_debt) * 100, 2) AS percentage_paid
+        FROM user_total_debt utd
+        LEFT JOIN user_total_paid utp ON utd.userid = utp.userid AND utd.groupid = utp.groupid
         """
 
         # Execute the query using parameterized input
@@ -184,7 +193,6 @@ def get_group_member_debts(group_id):
         # Close the connection if it was established
         if connection:
             connection.close()
-
 
 # Creates a new bill
 def add_bill(title, amount, bill_date, status, location, group_id, bill_type, comments):
@@ -249,6 +257,75 @@ def add_user_bill(userid, billid, percentage):
         cursor.execute(query, {"userid": userid, "billid": billid, "percentage": percentage})
         connection.commit()
         print(f"Successfully added user {userid} to bill {billid} with {percentage}% responsibility.")
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+
+    finally:
+        if connection:
+            connection.close()
+
+# Function to create a new group
+def create_group(group_name, created_by_userid):
+    """
+    Creates a new group in the Group table.
+    Returns the group ID of the created group.
+    """
+    connection = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Insert new group into Group table
+        query = """
+            INSERT INTO "Group" (groupid, name, createddate, status)
+            VALUES (GROUP_SEQ.NEXTVAL, :group_name, SYSDATE, 'active')
+            RETURNING groupid INTO :group_id
+        """
+        group_id_var = cursor.var(cx_Oracle.NUMBER)
+        cursor.execute(query, {"group_name": group_name, "group_id": group_id_var})
+        connection.commit()
+
+        # Retrieve the generated group ID
+        group_id = group_id_var.getvalue()[0]
+
+        # Assign the creating user as the group leader in the user_group table
+        cursor.execute("""
+            INSERT INTO user_group (userid, groupid, status, debt_status, isleader)
+            VALUES (:user_id, :group_id, 'active', 'No debt', 'Y')
+        """, {"user_id": created_by_userid, "group_id": group_id})
+        connection.commit()
+
+        print(f"Group '{group_name}' created successfully with Group ID: {group_id}")
+        return group_id
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+        return None
+
+    finally:
+        if connection:
+            connection.close()
+
+# Function to add a user to an existing group
+def add_user_to_group(user_id, group_id, is_leader='N'):
+    """
+    Adds a user to an existing group in the user_group table.
+    """
+    connection = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Insert user into user_group relationship
+        query = """
+            INSERT INTO user_group (userid, groupid, status, debt_status, isleader)
+            VALUES (:user_id, :group_id, 'active', 'No debt', :is_leader)
+        """
+        cursor.execute(query, {"user_id": user_id, "group_id": group_id, "is_leader": is_leader})
+        connection.commit()
+
+        print(f"User {user_id} added to group {group_id} successfully.")
 
     except cx_Oracle.DatabaseError as e:
         print("Database error:", e)

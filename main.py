@@ -19,6 +19,7 @@ def main():
             0. Exit
             1. Show my groups
             2. Open group
+            3. Create / manage group
             ''')
             option = input(': ')
 
@@ -114,6 +115,34 @@ def main():
 
                     else:
                         print("Invalid option. Please try again.")
+            elif option == '3':
+                # Create / Manage Group functionality
+                print('Group Management Options')
+                print('''
+                1. Create new group
+                2. Add user to group
+                ''')
+                group_option = input(': ')
+
+                if group_option == '1':
+                    # Create a new group
+                    group_name = input("Enter the name of the new group: ")
+                    created_by_userid = input("Enter your User ID to be the group leader: ")
+
+                    group_id = db_connection.create_group(group_name, created_by_userid)
+                    if group_id:
+                        print(f"Group '{group_name}' created successfully with Group ID: {group_id}")
+                    else:
+                        print("Error creating group.")
+
+                elif group_option == '2':
+                    # Add user to an existing group
+                    group_id = input("Enter the Group ID to add a user to: ")
+                    user_id = input("Enter the User ID of the user to add: ")
+                    is_leader = input("Is this user the leader? (Y/N): ").strip().upper() or 'N'
+
+                    db_connection.add_user_to_group(user_id, group_id, is_leader)
+                    print(f"User {user_id} added to group {group_id}")
 
             else:
                 print("Invalid option. Please try again.")
