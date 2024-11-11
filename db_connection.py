@@ -334,14 +334,16 @@ def add_user_to_group(user_id, group_id, is_leader='N'):
         if connection:
             connection.close()
 
-def member_to_member_transaction(from_user_id, to_user_id, amount, clear_all, payment_method):
+def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, payment_method, billId, group_id=None):
     """
-    Handles a transaction between two users by user IDs.
-    :param from_user_id: The user ID of the payer.
-    :param to_user_id: The user ID of the payee.
+    Handles a transaction between two users.
+    :param from_user_id: The ID of the payer.
+    :param to_user_id: The ID of the payee.
     :param amount: The amount to be transferred.
-    :param clear_all: Boolean indicating whether to clear all debt.
+    :param clear_debt: Boolean indicating whether to clear all debt.
     :param payment_method: The selected payment method (PayPal or Cash).
+    :param group_id: The ID of the group (optional).
+    :param billId: id del bill
     :return: Boolean indicating success or failure of the transaction.
     """
     connection = None
@@ -350,20 +352,20 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_all, pa
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Clear all debt or partial payment
-        if clear_all:
-            # Set the transaction amount to the total owed amount if `clear_all` is True
-            cursor.execute("""
-                SELECT SUM(amount) FROM transaction 
-                WHERE payerid = :from_user_id AND payeeid = :to_user_id AND status = 'pending'
-            """, {"from_user_id": from_user_id, "to_user_id": to_user_id})
-            total_debt = cursor.fetchone()[0]
-            amount = total_debt if total_debt else amount  # Use total debt if it exists
+        # If clear_debt is True, calculate the total outstanding debt using the PL/SQL function
+        if clear_debt:
+            total_debt_var = cursor.var(cx_Oracle.NUMBER)
+            cursor.callproc('GET_USER_TOTAL_DEBT', [from_user_id])  # Only pass from_user_id
+            total_debt = total_debt_var.getvalue() or 0
+            
+            if total_debt is None:
+                total_debt = 0
+            amount = total_debt if total_debt > 0 else amount
 
-        # Insert the transaction into the transaction table
+        # Insert the transaction into the transaction table, including group_id if provided
         query = """
-            INSERT INTO transaction (amount, "date", description, payerid, payeeid, status, payment_method)
-            VALUES (:amount, SYSDATE, :description, :from_user_id, :to_user_id, 'approved', :payment_method)
+            INSERT INTO transaction (transactionid, amount, "date", description, payerid, payeeid, status, payment_method, groupid, billid)
+            VALUES (transaction_seq.NEXTVAL, :amount, SYSDATE, :description, :from_user_id, :to_user_id, 'approved', :payment_method, :group_id, :billId)
         """
         description = f"Payment from User ID {from_user_id} to User ID {to_user_id} via {payment_method}"
         cursor.execute(query, {
@@ -371,11 +373,13 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_all, pa
             "description": description,
             "from_user_id": from_user_id,
             "to_user_id": to_user_id,
-            "payment_method": payment_method
+            "payment_method": payment_method,
+            "group_id": group_id,  # This will be None if not provided
+            "billId": billId
         })
 
-        # Update transactions to clear debt if `clear_all` is True
-        if clear_all:
+        # If clear_debt is True, update the status of the pending debts to "approved"
+        if clear_debt and total_debt > 0:
             cursor.execute("""
                 UPDATE transaction 
                 SET status = 'approved'
