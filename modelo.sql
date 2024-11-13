@@ -255,5 +255,4 @@ INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES
 INSERT INTO user_group (userid, groupid, status, debt_status, isleader) VALUES 
 (5, 3, 'active', 'Paid', 'N');
 
-
 commit;

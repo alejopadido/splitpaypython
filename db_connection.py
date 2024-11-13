@@ -343,7 +343,7 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
     :param clear_debt: Boolean indicating whether to clear all debt.
     :param payment_method: The selected payment method (PayPal or Cash).
     :param group_id: The ID of the group (optional).
-    :param billId: id del bill
+    :param billId: ID of the bill.
     :return: Boolean indicating success or failure of the transaction.
     """
     connection = None
@@ -354,12 +354,7 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
 
         # If clear_debt is True, calculate the total outstanding debt using the PL/SQL function
         if clear_debt:
-            total_debt_var = cursor.var(cx_Oracle.NUMBER)
-            cursor.callproc('GET_USER_TOTAL_DEBT', [from_user_id])  # Only pass from_user_id
-            total_debt = total_debt_var.getvalue() or 0
-            
-            if total_debt is None:
-                total_debt = 0
+            total_debt = cursor.callfunc('GET_USER_TOTAL_DEBT', cx_Oracle.NUMBER, [from_user_id])
             amount = total_debt if total_debt > 0 else amount
 
         # Insert the transaction into the transaction table, including group_id if provided
@@ -395,6 +390,44 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
     except cx_Oracle.DatabaseError as e:
         print("Database error:", e)
         return False
+
+    finally:
+        if connection:
+            connection.close()
+            
+def get_bill_report():
+    connection = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Execute the report query
+        query = """
+        SELECT TO_CHAR(b.date, 'YYYY-Month') AS Bill_Month,
+               NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
+               NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
+               -- Additional groups
+               SUM(b.amount) AS "Total"
+        FROM bill b
+        JOIN group_table g ON b.groupid = g.groupid
+        GROUP BY TO_CHAR(b.date, 'YYYY-Month')
+        ORDER BY Bill_Month
+        """
+
+        cursor.execute(query)
+        report_data = cursor.fetchall()
+
+        # Print the report in table format
+        print("Report by Date and Group:")
+        print("{:<15} {:<10} {:<10} {:<10}".format("Bill Month", "Group 1", "Group 2", "Total"))
+        for row in report_data:
+            print("{:<15} {:<10} {:<10} {:<10}".format(row[0], row[1], row[2], row[3]))
+
+        return report_data
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+        return None
 
     finally:
         if connection:

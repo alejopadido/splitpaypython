@@ -21,6 +21,7 @@ def main():
             2. Open group
             3. Create / manage group
             4. Member to member transaction
+            5. Bill Report by Date and Group
             ''')
             option = input(': ')
 
@@ -60,6 +61,7 @@ def main():
                     1. See transactions
                     2. Manage bills
                     3. Add bill
+                    4. Member to member transaction
                     ''')
                     group_option = input(': ')
 
@@ -164,6 +166,13 @@ def main():
                     print(f"Transaction from user ID: {from_user_id} to user ID:{to_user_id} completed successfully!")
                 else:
                     print("Transaction failed. Please check the details and try again.")
+            elif option == '5':
+                # Bill Report by Date and Group
+                report_data = db_connection.get_bill_report()
+                if report_data:
+                    print("Bill report generated successfully!")
+                else:
+                    print("Failed to generate the bill report.")
 
             else:
                 print("Invalid option. Please try again.")
