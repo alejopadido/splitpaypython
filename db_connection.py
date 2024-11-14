@@ -394,7 +394,8 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
     finally:
         if connection:
             connection.close()
-            
+
+
 def get_bill_report():
     connection = None
     try:
@@ -403,14 +404,15 @@ def get_bill_report():
 
         # Execute the report query
         query = """
-        SELECT TO_CHAR(b.date, 'YYYY-Month') AS Bill_Month,
+        SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
                NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
                NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
-               -- Additional groups
-               SUM(b.amount) AS "Total"
-        FROM bill b
-        JOIN group_table g ON b.groupid = g.groupid
-        GROUP BY TO_CHAR(b.date, 'YYYY-Month')
+               -- Add more cases if there are more groups dynamically
+               NVL(SUM(b.amount), 0) AS "Total"
+        FROM "IS150403"."BILL" b
+        JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
+        JOIN "IS150403"."Group" g ON ug.groupid = g.groupid
+        GROUP BY TO_CHAR(b."date", 'YYYY-Month')
         ORDER BY Bill_Month
         """
 

@@ -62,3 +62,70 @@ commit;
 
 -- Audit table
 SELECT * FROM billing_audit ORDER BY timestamp DESC;
+
+-----------query testing sebas ------------
+SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+       SUM(b.amount) AS Total
+FROM BILL b
+GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+ORDER BY Bill_Month;
+
+
+-------t1
+ SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+               NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
+               NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
+               -- Add more cases if there are more groups dynamically
+               NVL(SUM(b.amount), 0) AS "Total"
+        FROM "IS150403"."BILL" b
+        JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
+        JOIN "IS150403"."GROUP" g ON ug.groupid = g.groupid
+        GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+        ORDER BY Bill_Month;
+
+
+
+-------t2
+SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+               NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
+               NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
+               NVL(SUM(b.amount), 0) AS "Total"
+        FROM "IS150403"."BILL" b
+        JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
+        JOIN "IS150403"."GROUP" g ON ug.groupid = g.groupid
+        GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+        ORDER BY Bill_Month;
+
+-- testing tables
+SELECT * FROM "IS150403"."BILL" WHERE ROWNUM = 1;
+SELECT * FROM "IS150403"."USER_GROUP" WHERE ROWNUM = 1;
+SELECT * FROM "IS150403"."GROUP" WHERE ROWNUM = 1;
+
+--gradual
+
+SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+       SUM(b.amount) AS Total
+FROM "IS150403"."BILL" b
+GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+ORDER BY Bill_Month;
+
+--gradual 2
+SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+       SUM(b.amount) AS Total
+FROM "IS150403"."BILL" b
+JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
+GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+ORDER BY Bill_Month;
+
+--gradual 3
+SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
+       NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
+       NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
+       SUM(b.amount) AS Total
+FROM "IS150403"."BILL" b
+JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
+JOIN "IS150403"."Group" g ON ug.groupid = g.groupid
+GROUP BY TO_CHAR(b."date", 'YYYY-Month')
+ORDER BY Bill_Month;
+
+SELECT * FROM all_tables WHERE table_name = 'Group';
