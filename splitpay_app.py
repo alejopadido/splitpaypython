@@ -1,5 +1,7 @@
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
+from tkinter import filedialog
 import db_connection
 
 class SplitPayApp:
@@ -315,8 +317,7 @@ class SplitPayApp:
             self.open_group(self.username, group_id_final)  # Refresh group view
         else:
             messagebox.showerror("Transaction Failed", "Failed to complete the transaction. Please check the details and try again.")
-
-       
+   
 
     def add_bill(self, username, group_id):
         self.clear_window()
@@ -358,8 +359,19 @@ class SplitPayApp:
         self.comments_entry = ttk.Entry(frame)
         self.comments_entry.grid(row=7, column=1, pady=5, padx=5)
 
-        ttk.Button(frame, text="Add Bill", command=lambda: self.save_bill(username, group_id)).grid(row=8, columnspan=2, pady=20)
-        ttk.Button(frame, text="Back", command=lambda: self.open_group(username, group_id)).grid(row=9, columnspan=2, pady=10)
+        # Button to upload receipt image
+        self.image_path = None  # Store the path of the selected image
+        ttk.Button(frame, text="Upload Receipt Image", command=self.upload_image).grid(row=8, columnspan=2, pady=10)
+
+        ttk.Button(frame, text="Add Bill", command=lambda: self.save_bill(username, group_id)).grid(row=9, columnspan=2, pady=20)
+        ttk.Button(frame, text="Back", command=lambda: self.open_group(username, group_id)).grid(row=10, columnspan=2, pady=10)
+
+    def upload_image(self):
+        # Open file dialog to select an image file
+        file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png;*.bmp")])
+        if file_path:
+            self.image_path = file_path
+            messagebox.showinfo("Image Selected", f"Selected image: {os.path.basename(file_path)}")
 
     def save_bill(self, username, group_id):
         # Collect data from the user
@@ -371,8 +383,14 @@ class SplitPayApp:
         bill_type = self.type_entry.get()
         comments = self.comments_entry.get()
 
+        # Read the selected image file, if any
+        image_data = None
+        if self.image_path:
+            with open(self.image_path, 'rb') as file:
+                image_data = file.read()
+
         # Add new bill to the database
-        bill_id = db_connection.add_bill(title, amount, date, status, location, group_id, bill_type, comments)
+        bill_id = db_connection.add_bill(title, amount, date, status, location, group_id, bill_type, comments, image_data)
         if bill_id:
             messagebox.showinfo("Success", f"Bill added successfully with Bill ID: {bill_id}")  
             self.open_group(username, group_id)  # Reopen group to refresh data

@@ -1,6 +1,9 @@
 SELECT * 
 FROM "User";
 
+SELECT * FROM user_group;
+
+SELECT * FROM bill;
 -- Query Testing
 
 SELECT g.groupid, g.name, g.createddate, g.status

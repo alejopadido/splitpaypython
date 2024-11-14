@@ -195,7 +195,7 @@ def get_group_member_debts(group_id):
             connection.close()
 
 # Creates a new bill
-def add_bill(title, amount, bill_date, status, location, group_id, bill_type, comments):
+def add_bill(title, amount, bill_date, status, location, group_id, bill_type, comments, receipt_image):
     """
     Adds a new bill to the bill table and returns the new bill ID.
     """
@@ -207,12 +207,13 @@ def add_bill(title, amount, bill_date, status, location, group_id, bill_type, co
 
         # Insert new bill (billid will be auto-generated)
         query = """
-            INSERT INTO bill (title, amount, "date", status, location, groupid, type, comments)
-            VALUES (:title, :amount, TO_DATE(:bill_date, 'YYYY-MM-DD'), :status, :location, :group_id, :bill_type, :comments)
+            INSERT INTO bill (title, amount, "date", status, location, groupid, type, comments, receiptimage)
+            VALUES (:title, :amount, TO_DATE(:bill_date, 'YYYY-MM-DD'), :status, :location, :group_id, :bill_type, :comments, :receipt_image)
             RETURNING billid INTO :billid
         """
         # Define the variable to capture the generated bill ID
         bill_id_var = cursor.var(cx_Oracle.NUMBER)
+
         # Execute the insert query
         cursor.execute(query, {
             "title": title,
@@ -223,6 +224,7 @@ def add_bill(title, amount, bill_date, status, location, group_id, bill_type, co
             "group_id": group_id,
             "bill_type": bill_type,
             "comments": comments,
+            "receipt_image": receipt_image,
             "billid": bill_id_var
         })
         connection.commit()
