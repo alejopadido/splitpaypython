@@ -188,7 +188,7 @@ class SplitPayApp:
             ttk.Button(button_frame, text="Manage Bills", command=self.manage_bills).pack(pady=5)
             ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
             ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
-            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
+            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=5)
         else:
             messagebox.showerror("Error", "No financial details available for this group.")
 
@@ -229,46 +229,44 @@ class SplitPayApp:
 
 
 
-    def member_to_member_transaction(self, username, group_id):
-        # Clear the current window to add transaction fields
+    def member_to_member_transaction(self, username):
         self.clear_window()
 
-        # Create a container for the transaction form
-        container = ttk.Frame(self.root)
-        container.pack(expand=True, fill="both")
-        frame = ttk.Frame(container, padding="20")
+        frame = ttk.Frame(self.root, padding="20")
         frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Transaction Form Fields
         ttk.Label(frame, text="Member to Member Transaction", font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=20)
 
-        ttk.Label(frame, text="From User ID:").grid(row=1, column=0, sticky=tk.W, pady=5, padx=5)
-        self.from_user_entry = ttk.Entry(frame)
-        self.from_user_entry.grid(row=1, column=1, pady=5, padx=5)
+        # Input fields for the transaction
+        ttk.Label(frame, text="Payer User ID:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.from_user_id_entry = ttk.Entry(frame)
+        self.from_user_id_entry.grid(row=1, column=1, pady=5)
 
-        ttk.Label(frame, text="To User ID:").grid(row=2, column=0, sticky=tk.W, pady=5, padx=5)
-        self.to_user_entry = ttk.Entry(frame)
-        self.to_user_entry.grid(row=2, column=1, pady=5, padx=5)
+        ttk.Label(frame, text="Payee User ID:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.to_user_id_entry = ttk.Entry(frame)
+        self.to_user_id_entry.grid(row=2, column=1, pady=5)
 
-        ttk.Label(frame, text="Amount:").grid(row=3, column=0, sticky=tk.W, pady=5, padx=5)
+        ttk.Label(frame, text="Amount:").grid(row=3, column=0, sticky=tk.W, pady=5)
         self.amount_entry = ttk.Entry(frame)
-        self.amount_entry.grid(row=3, column=1, pady=5, padx=5)
+        self.amount_entry.grid(row=3, column=1, pady=5)
 
-        ttk.Label(frame, text="Payment Method (Paypal/Cash):").grid(row=4, column=0, sticky=tk.W, pady=5, padx=5)
-        self.payment_method_entry = ttk.Entry(frame)
-        self.payment_method_entry.grid(row=4, column=1, pady=5, padx=5)
-
-        ttk.Label(frame, text="Bill ID:").grid(row=5, column=0, sticky=tk.W, pady=5, padx=5)
+        ttk.Label(frame, text="Bill ID:").grid(row=4, column=0, sticky=tk.W, pady=5)
         self.bill_id_entry = ttk.Entry(frame)
-        self.bill_id_entry.grid(row=5, column=1, pady=5, padx=5)
+        self.bill_id_entry.grid(row=4, column=1, pady=5)
 
-        ttk.Label(frame, text="Clear All Debt? (y/n):").grid(row=6, column=0, sticky=tk.W, pady=5, padx=5)
-        self.clear_all_entry = ttk.Entry(frame)
-        self.clear_all_entry.grid(row=6, column=1, pady=5, padx=5)
+        self.clear_all_var = tk.BooleanVar()
+        ttk.Checkbutton(frame, text="Clear All Debt", variable=self.clear_all_var).grid(row=5, column=1, sticky=tk.W, pady=5)
 
-        # Transaction Button
-        ttk.Button(frame, text="Complete Transaction", command=lambda: self.execute_transaction(group_id)).grid(row=7, columnspan=2, pady=20)
-        ttk.Button(frame, text="Back", command=lambda: self.open_group(username, group_id)).grid(row=8, columnspan=2, pady=10)
+        ttk.Label(frame, text="Payment Method (Paypal/Cash):").grid(row=6, column=0, sticky=tk.W, pady=5)
+        self.payment_method_entry = ttk.Entry(frame)
+        self.payment_method_entry.grid(row=6, column=1, pady=5)
+
+        ttk.Label(frame, text="Group ID (optional):").grid(row=7, column=0, sticky=tk.W, pady=5)
+        self.group_id_entry_transaction = ttk.Entry(frame)
+        self.group_id_entry_transaction.grid(row=7, column=1, pady=5)
+
+        ttk.Button(frame, text="Submit", command=self.process_member_to_member_transaction).grid(row=8, columnspan=2, pady=20)
+        ttk.Button(frame, text="Back", command=lambda: self.main_menu(username)).grid(row=9, columnspan=2, pady=10)
 
     def execute_transaction(self, group_id):
         # Get values from the form
