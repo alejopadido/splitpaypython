@@ -100,7 +100,7 @@ class SplitPayApp:
         ttk.Button(frame, text="Show My Groups", command=lambda: self.show_groups(username)).pack(pady=10)
         ttk.Button(frame, text="Open Group", command=lambda: self.open_group_screen(username)).pack(pady=10)
         ttk.Button(frame, text="Create / Manage Group", command=lambda: self.manage_group_screen(username)).pack(pady=10)
-        ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=10)
+        #ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=10)
         ttk.Button(frame, text="Bill Report by Date and Group", command=self.bill_report_screen).pack(pady=10)
         ttk.Button(frame, text="Exit", command=self.root.quit).pack(pady=10)
 
@@ -188,7 +188,7 @@ class SplitPayApp:
             ttk.Button(button_frame, text="Manage Bills", command=self.manage_bills).pack(pady=5)
             ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
             ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
-            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=5)
+            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
         else:
             messagebox.showerror("Error", "No financial details available for this group.")
 
@@ -229,7 +229,7 @@ class SplitPayApp:
 
 
 
-    def member_to_member_transaction(self, username):
+    def member_to_member_transaction(self, username, group_id):
         self.clear_window()
 
         frame = ttk.Frame(self.root, padding="20")
@@ -265,17 +265,29 @@ class SplitPayApp:
         self.group_id_entry_transaction = ttk.Entry(frame)
         self.group_id_entry_transaction.grid(row=7, column=1, pady=5)
 
-        ttk.Button(frame, text="Submit", command=self.process_member_to_member_transaction).grid(row=8, columnspan=2, pady=20)
-        ttk.Button(frame, text="Back", command=lambda: self.main_menu(username)).grid(row=9, columnspan=2, pady=10)
+        ttk.Button(frame, text="Submit", command=lambda: self.execute_transaction(group_id)).grid(row=8, columnspan=2, pady=20)
+        ttk.Button(frame, text="Back", command=lambda: self.open_group(username, group_id)).grid(row=9, columnspan=2, pady=10)
 
     def execute_transaction(self, group_id):
         # Get values from the form
-        from_user_id = self.from_user_entry.get()
-        to_user_id = self.to_user_entry.get()
-        amount = float(self.amount_entry.get())
-        payment_method = self.payment_method_entry.get().strip().capitalize()
+        from_user_id = self.from_user_id_entry.get()
+        to_user_id = self.to_user_id_entry.get()
+        try:
+            amount = float(self.amount_entry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid amount.")
+            return
+
         bill_id = self.bill_id_entry.get()
-        clear_all = self.clear_all_entry.get().strip().lower() == 'y'
+        clear_all = self.clear_all_var.get()  # This will be True or False based on the checkbox
+        payment_method = self.payment_method_entry.get().strip().capitalize()
+        group_id_optional = self.group_id_entry_transaction.get().strip()
+        group_id_final = group_id if not group_id_optional else int(group_id_optional)
+
+        # Check if required fields are filled
+        if not from_user_id or not to_user_id or not amount or not payment_method:
+            messagebox.showerror("Error", "Please fill in all required fields.")
+            return
 
         # Perform the transaction using db_connection
         transaction_success = db_connection.member_to_member_transaction(
@@ -285,15 +297,17 @@ class SplitPayApp:
             clear_all=clear_all,
             payment_method=payment_method,
             bill_id=bill_id,
-            group_id=group_id
+            group_id=group_id_final
         )
 
         # Show a success or error message
         if transaction_success:
             messagebox.showinfo("Transaction Completed", f"Transaction from User {from_user_id} to User {to_user_id} completed successfully.")
-            self.open_group(self.username, group_id)  # Refresh group view
+            self.open_group(self.username, group_id_final)  # Refresh group view
         else:
             messagebox.showerror("Transaction Failed", "Failed to complete the transaction. Please check the details and try again.")
+
+       
 
     def add_bill(self, username, group_id):
         self.clear_window()
