@@ -184,13 +184,50 @@ class SplitPayApp:
             button_frame = ttk.Frame(container)
             button_frame.pack(pady=20)
 
-            ttk.Button(button_frame, text="See Transactions", command=self.see_transactions).pack(pady=5)
+            ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
             ttk.Button(button_frame, text="Manage Bills", command=self.manage_bills).pack(pady=5)
             ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
             ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
-            ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
+            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
         else:
             messagebox.showerror("Error", "No financial details available for this group.")
+
+
+    def see_transactions(self, username, group_id):
+        self.clear_window()
+
+        container = ttk.Frame(self.root)
+        container.pack(expand=True, fill="both")
+
+        frame = self.create_scrollable_frame(container)
+
+        ttk.Label(frame, text=f"Transactions for Group ID: {group_id}", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+        # Get transactions from the database
+        transactions = db_connection.get_group_transactions(group_id)
+
+        if transactions:
+            columns = ("Transaction ID", "Amount", "Date", "Description", "Payer ID", "Payee ID", "Status", "Bill ID")
+            tree = ttk.Treeview(frame, columns=columns, show="headings")
+            tree.pack(expand=True, fill="both")
+
+            for col in columns:
+                tree.heading(col, text=col)
+                tree.column(col, anchor=tk.W)
+
+            for index, transaction in enumerate(transactions):
+                tag = 'oddrow' if index % 2 == 0 else 'evenrow'
+                tree.insert("", tk.END, values=transaction, tags=(tag,))
+
+            tree.tag_configure('oddrow', background='#E8E8E8')
+            tree.tag_configure('evenrow', background='#DFDFDF')
+
+        else:
+            ttk.Label(frame, text="No transactions found for this group.").pack(pady=5)
+
+        ttk.Button(frame, text="Back", command=lambda: self.open_group(username=username, group_id=group_id)).pack(pady=20)
+
+
 
     def member_to_member_transaction(self, username, group_id):
         # Clear the current window to add transaction fields
@@ -325,8 +362,6 @@ class SplitPayApp:
     def manage_group_screen(self, username):
         messagebox.showinfo("Info", "Create / Manage Group functionality not implemented yet.")
 
-    def see_transactions(self):
-        messagebox.showinfo("Info", "See transactions functionality not implemented yet.")
 
     def manage_bills(self):
         report_data = db_connection.get_bill_report()
