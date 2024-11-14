@@ -285,7 +285,7 @@ class SplitPayApp:
         group_id_final = group_id if not group_id_optional else int(group_id_optional)
 
         # Check if required fields are filled
-        if not from_user_id or not to_user_id or not amount or not payment_method:
+        if not from_user_id or not to_user_id or not payment_method:
             messagebox.showerror("Error", "Please fill in all required fields.")
             return
 
@@ -294,15 +294,15 @@ class SplitPayApp:
             from_user_id=from_user_id,
             to_user_id=to_user_id,
             amount=amount,
-            clear_all=clear_all,
+            clear_debt=clear_all,
             payment_method=payment_method,
-            bill_id=bill_id,
+            billId=bill_id,
             group_id=group_id_final
         )
 
         # Show a success or error message
         if transaction_success:
-            messagebox.showinfo("Transaction Completed", f"Transaction from User {from_user_id} to User {to_user_id} completed successfully.")
+            messagebox.showinfo("Transaction Completed", f"Transaction from User ID {from_user_id} to User ID {to_user_id} completed successfully.")
             self.open_group(self.username, group_id_final)  # Refresh group view
         else:
             messagebox.showerror("Transaction Failed", "Failed to complete the transaction. Please check the details and try again.")
