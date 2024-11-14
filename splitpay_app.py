@@ -100,6 +100,8 @@ class SplitPayApp:
         ttk.Button(frame, text="Show My Groups", command=lambda: self.show_groups(username)).pack(pady=10)
         ttk.Button(frame, text="Open Group", command=lambda: self.open_group_screen(username)).pack(pady=10)
         ttk.Button(frame, text="Create / Manage Group", command=lambda: self.manage_group_screen(username)).pack(pady=10)
+        ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=10)
+        ttk.Button(frame, text="Bill Report by Date and Group", command=self.bill_report_screen).pack(pady=10)
         ttk.Button(frame, text="Exit", command=self.root.quit).pack(pady=10)
 
     def show_groups(self, username):
@@ -320,6 +322,9 @@ class SplitPayApp:
             messagebox.showerror("Error", "Error adding bill. Please try again.")
 
     # Placeholder methods for not-yet-implemented features
+    def manage_group_screen(self, username):
+        messagebox.showinfo("Info", "Create / Manage Group functionality not implemented yet.")
+
     def see_transactions(self):
         messagebox.showinfo("Info", "See transactions functionality not implemented yet.")
 
