@@ -605,3 +605,79 @@ def update_group_members(group_id, members, leader_id):
         if connection:
             connection.close()
 
+def get_group_bills(group_id):
+    """
+    Get the list of bills for a specific group by group_id.
+    Returns a list of bills (bill ID, title, amount, date, status, location, type, comments, receipt image).
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the bills for the given group_id
+        query = """
+            SELECT billid, title, amount, TO_CHAR("date", 'YYYY-MM-DD'), status, location, type, comments, receiptimage
+            FROM bill
+            WHERE groupid = :group_id
+        """
+
+        # Execute the query using parameterized input
+        cursor.execute(query, {"group_id": group_id})
+
+        # Fetch all results
+        bills = cursor.fetchall()
+
+        # Return the list of bills (each item is a tuple)
+        return bills
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return []
+
+    finally:
+        # Close the connection if it was established
+        if connection:
+            connection.close()
+
+def get_bill_image(bill_id):
+    """
+    Get the receipt image of a bill as bytes from the database.
+    :param bill_id: ID of the bill to fetch the image.
+    :return: Bytes of the receipt image or None if not found.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the receipt image for the given bill ID
+        query = """
+            SELECT receiptimage
+            FROM bill
+            WHERE billid = :bill_id
+        """
+
+        # Execute the query using parameterized input
+        cursor.execute(query, {"bill_id": bill_id})
+        result = cursor.fetchone()
+
+        if result and result[0] is not None:
+            # Read the LOB object into bytes
+            receipt_image_bytes = result[0].read()
+            return receipt_image_bytes
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return None
+
+    finally:
+        # Close the connection if it was established
+        if connection:
+            connection.close()
+
+    return None

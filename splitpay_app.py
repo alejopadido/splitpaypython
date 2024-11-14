@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import filedialog
 import db_connection
+import cx_Oracle
 
 class SplitPayApp:
     def __init__(self, root):
@@ -199,9 +200,100 @@ class SplitPayApp:
         button_frame.pack(pady=20)
 
         ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
+        ttk.Button(button_frame, text="See Group Bills", command=lambda: self.see_group_bills(username, group_id)).pack(pady=5)
         ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
         ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
         ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
+
+    def see_group_bills(self, username, group_id):
+        # Fetch the bills for the group
+        bills = db_connection.get_group_bills(group_id)
+
+        if not bills:
+            messagebox.showerror("Error", "No bills available for this group.")
+            return
+
+        # Clear the window to display the bills
+        self.clear_window()
+
+        container = ttk.Frame(self.root)
+        container.pack(expand=True, fill="both")
+
+        frame = self.create_scrollable_frame(container)
+
+        ttk.Label(frame, text=f"Bills for Group ID: {group_id}", font=("Helvetica", 16, "bold")).pack(pady=20)
+
+        # Create Treeview for bills
+        columns = ("Bill ID", "Title", "Amount", "Date", "Status", "Location", "Type", "Comments")
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(expand=True, fill="both")
+
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, anchor=tk.W)
+
+        # Add the bills to the Treeview
+        for index, bill in enumerate(bills):
+            tag = 'oddrow' if index % 2 == 0 else 'evenrow'
+            tree.insert("", tk.END, values=bill[:-1], tags=(tag,))  # Insert all values except the image BLOB
+
+        tree.tag_configure('oddrow', background='#E8E8E8')
+        tree.tag_configure('evenrow', background='#DFDFDF')
+
+        # Display the selected image
+        def show_receipt_image():
+            selected_item = tree.selection()
+            if selected_item:
+                item = tree.item(selected_item)
+                bill_id = item['values'][0]
+
+                # Retrieve the image BLOB from the database
+                receipt_image_bytes = db_connection.get_bill_image(bill_id)
+
+                if receipt_image_bytes:
+                    try:
+                        # Save image temporarily and display it
+                        temp_image_path = "temp_receipt_image.png"
+                        with open(temp_image_path, "wb") as file:
+                            file.write(receipt_image_bytes)
+
+                        # Create a new Toplevel window to display the image
+                        image_window = tk.Toplevel(self.root)
+                        image_window.title("Receipt Image")
+                        image_window.geometry("400x400")  # Set window size if needed
+
+                        # Load and display the image in the new window
+                        img = tk.PhotoImage(file=temp_image_path)
+                        label = tk.Label(image_window, image=img)
+                        label.image = img  # Keep reference to avoid garbage collection
+                        label.pack()
+
+                        # Ensure that the `Toplevel` window stays in focus
+                        image_window.transient(self.root)
+                        image_window.grab_set()
+
+                        # Close temporary file on window close
+                        def close_image_window():
+                            image_window.destroy()
+                            # Remove the temp image file if it exists
+                            if os.path.exists(temp_image_path):
+                                os.remove(temp_image_path)
+
+                        # Bind the close event to remove the temp image file
+                        image_window.protocol("WM_DELETE_WINDOW", close_image_window)
+
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to load the image from the database: {e}")
+                else:
+                    messagebox.showerror("Error", "No receipt image found for this bill.")
+
+        # Button to show receipt image
+        ttk.Button(frame, text="Show Receipt Image", command=show_receipt_image).pack(pady=10)
+
+        # Back button
+        ttk.Button(frame, text="Back", command=lambda: self.open_group(username, group_id)).pack(pady=20)
+
+
 
 
     def see_transactions(self, username, group_id):
