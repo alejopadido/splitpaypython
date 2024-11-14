@@ -185,7 +185,7 @@ class SplitPayApp:
             button_frame.pack(pady=20)
 
             ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
-            ttk.Button(button_frame, text="Manage Bills", command=self.manage_bills).pack(pady=5)
+            ttk.Button(button_frame, text="Manage Bills", command=lambda: self.manage_bills(username)).pack(pady=5)
             ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
             ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
             ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
@@ -375,8 +375,8 @@ class SplitPayApp:
         messagebox.showinfo("Info", "Create / Manage Group functionality not implemented yet.")
 
 
-    def manage_bills(self):
-        report_data = db_connection.get_bill_report()
+    def manage_bills(self, username):
+        report_data, totals = db_connection.get_bill_report()
         
         if report_data:
             self.clear_window()
@@ -388,7 +388,14 @@ class SplitPayApp:
             
             ttk.Label(frame, text="Bill Report by Date and Group", font=("Helvetica", 16, "bold")).pack(pady=20)
             
-            columns = ("Bill Month", "Group 1", "Group 2", "Total")
+            # Get unique group names for column headers
+            group_names = set()
+            for groups in report_data.values():
+                group_names.update(groups.keys())
+            group_names = sorted(group_names)
+
+            # Set up Treeview columns
+            columns = ["Bill Month"] + group_names + ["Total"]
             tree = ttk.Treeview(frame, columns=columns, show="headings")
             tree.pack(expand=True, fill="both")
 
@@ -396,12 +403,28 @@ class SplitPayApp:
                 tree.heading(col, text=col)
                 tree.column(col, anchor=tk.W)
 
-            for row in report_data:
+            # Insert data rows
+            for bill_month, groups in report_data.items():
+                row = [bill_month]
+                total = 0
+                for group in group_names:
+                    amount = groups.get(group, 0)
+                    row.append(amount)
+                    total += amount
+                row.append(total)
                 tree.insert("", tk.END, values=row)
-            
+
+            # Insert total row
+            total_row = ["Total"]
+            for group in group_names:
+                total_row.append(totals.get(group, 0))
+            total_row.append(totals.get("Total", 0))
+            tree.insert("", tk.END, values=total_row)
+
             ttk.Button(frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=20)
         else:
             messagebox.showerror("Error", "Failed to generate the bill report.")
+
 
 
 # Main application

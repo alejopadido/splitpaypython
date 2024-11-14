@@ -396,40 +396,53 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
             connection.close()
 
 def get_bill_report():
+    """
+    Generate a report of bill amounts by date and by group.
+    The report dynamically adjusts for new groups and dates.
+    """
     connection = None
     try:
         connection = get_connection()
         cursor = connection.cursor()
 
-        # Execute the report query
+        # Query to get report data by month and group
         query = """
-        SELECT TO_CHAR(b."date", 'YYYY-Month') AS Bill_Month,
-               NVL(SUM(CASE WHEN g.groupid = 1 THEN b.amount END), 0) AS "Group 1",
-               NVL(SUM(CASE WHEN g.groupid = 2 THEN b.amount END), 0) AS "Group 2",
-               -- Add more cases if there are more groups dynamically
-               NVL(SUM(b.amount), 0) AS "Total"
-        FROM "IS150403"."BILL" b
-        JOIN "IS150403"."USER_GROUP" ug ON b.groupid = ug.groupid
-        JOIN "IS150403"."Group" g ON ug.groupid = g.groupid
-        GROUP BY TO_CHAR(b."date", 'YYYY-Month')
-        ORDER BY Bill_Month
+        SELECT 
+            TO_CHAR(b."date", 'YYYY-MM') AS bill_month,
+            g.name AS group_name,
+            SUM(b.amount) AS total_amount
+        FROM bill b
+        JOIN "Group" g ON b.groupid = g.groupid
+        GROUP BY TO_CHAR(b."date", 'YYYY-MM'), g.name
+        ORDER BY TO_CHAR(b."date", 'YYYY-MM'), g.name
         """
 
         cursor.execute(query)
-        report_data = cursor.fetchall()
+        rows = cursor.fetchall()
 
-        # Print the report in table format
-        print("Report by Date and Group:")
-        print("{:<15} {:<10} {:<10} {:<10}".format("Bill Month", "Group 1", "Group 2", "Total"))
-        for row in report_data:
-            print("{:<15} {:<10} {:<10} {:<10}".format(row[0], row[1], row[2], row[3]))
+        # Prepare the data structure for the report
+        report = {}
+        for row in rows:
+            bill_month = row[0]
+            group_name = row[1]
+            total_amount = row[2]
+            
+            if bill_month not in report:
+                report[bill_month] = {}
+            report[bill_month][group_name] = total_amount
 
-        return report_data
+        # Calculate totals
+        totals = {}
+        for month, groups in report.items():
+            for group, amount in groups.items():
+                totals[group] = totals.get(group, 0) + amount
+            totals['Total'] = totals.get('Total', 0) + sum(groups.values())
+
+        return report, totals
 
     except cx_Oracle.DatabaseError as e:
         print("Database error:", e)
-        return None
-
+        return None, None
     finally:
         if connection:
             connection.close()
