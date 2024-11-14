@@ -395,7 +395,6 @@ def member_to_member_transaction(from_user_id, to_user_id, amount, clear_debt, p
         if connection:
             connection.close()
 
-
 def get_bill_report():
     connection = None
     try:
@@ -432,5 +431,43 @@ def get_bill_report():
         return None
 
     finally:
+        if connection:
+            connection.close()
+
+def get_group_transactions(group_id):
+    """
+    Get the list of transactions for a specific group by group_id.
+    Returns a list of transactions with their details.
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the transactions for the given group_id
+        query = """
+            SELECT transactionid, amount, "date", description, payerid, payeeid, status, billid
+            FROM "IS150403".transaction
+            WHERE groupid = :group_id
+            ORDER BY "date" DESC
+        """
+
+        # Execute the query using parameterized input
+        cursor.execute(query, {"group_id": group_id})
+
+        # Fetch all results
+        transactions = cursor.fetchall()
+
+        # Return the list of transactions (each item is a tuple)
+        return transactions
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return []
+
+    finally:
+        # Close the connection if it was established
         if connection:
             connection.close()
