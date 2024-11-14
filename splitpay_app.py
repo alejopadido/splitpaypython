@@ -102,6 +102,7 @@ class SplitPayApp:
         ttk.Button(frame, text="Show My Groups", command=lambda: self.show_groups(username)).pack(pady=10)
         ttk.Button(frame, text="Open Group", command=lambda: self.open_group_screen(username)).pack(pady=10)
         ttk.Button(frame, text="Create / Manage Group", command=lambda: self.manage_group_screen(username)).pack(pady=10)
+        ttk.Button(frame, text="Manage Bills", command=lambda: self.manage_bills(username)).pack(pady=5)
         #ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=10)
         # ttk.Button(frame, text="Bill Report by Date and Group", command=self.bill_report_screen).pack(pady=10)
         ttk.Button(frame, text="Exit", command=self.root.quit).pack(pady=10)
@@ -198,7 +199,6 @@ class SplitPayApp:
         button_frame.pack(pady=20)
 
         ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
-        ttk.Button(button_frame, text="Manage Bills", command=lambda: self.manage_bills(username)).pack(pady=5)
         ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
         ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
         ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
