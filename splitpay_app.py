@@ -101,7 +101,7 @@ class SplitPayApp:
         ttk.Button(frame, text="Open Group", command=lambda: self.open_group_screen(username)).pack(pady=10)
         ttk.Button(frame, text="Create / Manage Group", command=lambda: self.manage_group_screen(username)).pack(pady=10)
         #ttk.Button(frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username)).pack(pady=10)
-        ttk.Button(frame, text="Bill Report by Date and Group", command=self.bill_report_screen).pack(pady=10)
+        # ttk.Button(frame, text="Bill Report by Date and Group", command=self.bill_report_screen).pack(pady=10)
         ttk.Button(frame, text="Exit", command=self.root.quit).pack(pady=10)
 
     def show_groups(self, username):
@@ -153,44 +153,53 @@ class SplitPayApp:
         if not group_id:
             group_id = self.group_id_entry.get()
 
+        # First, try to get group member debts
         members = db_connection.get_group_member_debts(group_id)
 
-        if members:
-            self.clear_window()
+        # If no members with debt are found, fall back to just getting the group members
+        if not members:
+            members = db_connection.get_group_members(group_id)
 
-            container = ttk.Frame(self.root)
-            container.pack(expand=True, fill="both")
+        # If we still have no members, show an error
+        if not members:
+            messagebox.showerror("Error", "No members available for this group.")
+            return
 
-            frame = self.create_scrollable_frame(container)
+        # Otherwise, proceed with showing group members
+        self.clear_window()
 
-            ttk.Label(frame, text=f"Members of Group ID: {group_id}", font=("Helvetica", 16, "bold")).pack(pady=20)
+        container = ttk.Frame(self.root)
+        container.pack(expand=True, fill="both")
 
-            columns = ("Name", "Total Debt", "Total Paid", "Payment Status", "Percentage Paid")
-            tree = ttk.Treeview(frame, columns=columns, show="headings")
-            tree.pack(expand=True, fill="both")
+        frame = self.create_scrollable_frame(container)
 
-            for col in columns:
-                tree.heading(col, text=col)
-                tree.column(col, anchor=tk.W)
+        ttk.Label(frame, text=f"Members of Group ID: {group_id}", font=("Helvetica", 16, "bold")).pack(pady=20)
 
-            for index, member in enumerate(members):
-                tag = 'oddrow' if index % 2 == 0 else 'evenrow'
-                tree.insert("", tk.END, values=member, tags=(tag,))
+        # Adjust columns based on what data we have
+        columns = ("Name", "Total Debt", "Total Paid", "Payment Status", "Percentage Paid") if db_connection.get_group_member_debts(group_id) else ("User ID", "Name", "Email")
+        tree = ttk.Treeview(frame, columns=columns, show="headings")
+        tree.pack(expand=True, fill="both")
 
-            tree.tag_configure('oddrow', background='#E8E8E8')
-            tree.tag_configure('evenrow', background='#DFDFDF')
+        for col in columns:
+            tree.heading(col, text=col)
+            tree.column(col, anchor=tk.W)
 
-            # Add buttons for actions after the Treeview to ensure visibility
-            button_frame = ttk.Frame(container)
-            button_frame.pack(pady=20)
+        for index, member in enumerate(members):
+            tag = 'oddrow' if index % 2 == 0 else 'evenrow'
+            tree.insert("", tk.END, values=member, tags=(tag,))
 
-            ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
-            ttk.Button(button_frame, text="Manage Bills", command=lambda: self.manage_bills(username)).pack(pady=5)
-            ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
-            ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
-            ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
-        else:
-            messagebox.showerror("Error", "No financial details available for this group.")
+        tree.tag_configure('oddrow', background='#E8E8E8')
+        tree.tag_configure('evenrow', background='#DFDFDF')
+
+        # Add buttons for actions after the Treeview to ensure visibility
+        button_frame = ttk.Frame(container)
+        button_frame.pack(pady=20)
+
+        ttk.Button(button_frame, text="See Transactions", command=lambda: self.see_transactions(username, group_id)).pack(pady=5)
+        ttk.Button(button_frame, text="Manage Bills", command=lambda: self.manage_bills(username)).pack(pady=5)
+        ttk.Button(button_frame, text="Add Bill", command=lambda: self.add_bill(username, group_id)).pack(pady=5)
+        ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).pack(pady=5)
+        ttk.Button(button_frame, text="Member to Member Transaction", command=lambda: self.member_to_member_transaction(username, group_id)).pack(pady=5)
 
 
     def see_transactions(self, username, group_id):
@@ -365,14 +374,110 @@ class SplitPayApp:
         # Add new bill to the database
         bill_id = db_connection.add_bill(title, amount, date, status, location, group_id, bill_type, comments)
         if bill_id:
-            messagebox.showinfo("Success", f"Bill added successfully with Bill ID: {bill_id}")
+            messagebox.showinfo("Success", f"Bill added successfully with Bill ID: {bill_id}")  
             self.open_group(username, group_id)  # Reopen group to refresh data
         else:
             messagebox.showerror("Error", "Error adding bill. Please try again.")
 
-    # Placeholder methods for not-yet-implemented features
     def manage_group_screen(self, username):
-        messagebox.showinfo("Info", "Create / Manage Group functionality not implemented yet.")
+        self.clear_window()
+
+        # Main container frame for all elements
+        container = ttk.Frame(self.root)
+        container.pack(expand=True, fill="both")
+
+        # Top frame for group details
+        top_frame = ttk.Frame(container, padding="20")
+        top_frame.pack(side="top", fill="x")
+
+        ttk.Label(top_frame, text="Manage Group", font=("Helvetica", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=10)
+
+        # Input for group name
+        ttk.Label(top_frame, text="Enter Group Name:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.group_name_entry = ttk.Entry(top_frame, width=30)
+        self.group_name_entry.grid(row=1, column=1, pady=5, padx=5)
+
+        # Dropdown for group leader selection
+        ttk.Label(top_frame, text="Select Group Leader:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        
+        # Get all users from the database
+        users = db_connection.get_all_users()
+
+        # Mapping of display text to user IDs, using both name and email to avoid duplicates
+        self.user_display_mapping = {f"{user[1]} ({user[2]})": user[0] for user in users}  # Mapping name (with email) to user ID
+        leader_display_names = list(self.user_display_mapping.keys())
+
+        # Debugging step to print out the leader names and mapping
+        print("Leader Display Mapping:", self.user_display_mapping)
+
+        self.leader_combobox = ttk.Combobox(top_frame, values=leader_display_names, width=28)
+        self.leader_combobox.grid(row=2, column=1, pady=5, padx=5)
+
+        # Frame for members selection
+        member_frame = self.create_scrollable_frame(container)
+        ttk.Label(member_frame, text="Select Members", font=("Helvetica", 14)).pack(pady=10)
+
+        # A dictionary to hold member checkboxes
+        self.member_checkboxes = {}
+
+        # Creating checkboxes for each user
+        for index, user in enumerate(users):
+            user_id, name, email = user  # Extracting data from tuple
+            member_var = tk.BooleanVar()
+            checkbox = ttk.Checkbutton(member_frame, text=f"{name} ({email})", variable=member_var)
+            checkbox.pack(anchor=tk.W, pady=2)
+            self.member_checkboxes[user_id] = member_var
+
+        # Bottom frame for action buttons
+        button_frame = ttk.Frame(container, padding="20")
+        button_frame.pack(side="bottom", fill="x")
+
+        ttk.Button(button_frame, text="Done", command=lambda: self.create_or_manage_group(username)).grid(row=0, column=2, padx=10, pady=10)
+        ttk.Button(button_frame, text="Back", command=lambda: self.main_menu(username)).grid(row=0, column=3, padx=10, pady=10)
+
+    def create_or_manage_group(self, username):
+        # Retrieve the group name from the entry widget
+        group_name = self.group_name_entry.get().strip()  # Use strip to remove extra spaces
+        leader_display_name = self.leader_combobox.get().strip()
+
+        # Add debugging to see what's being retrieved
+        print(f"Group Name: '{group_name}'")
+        print(f"Leader Display Name: '{leader_display_name}'")
+
+        # Check if the group name and leader name are provided
+        if not group_name:
+            messagebox.showerror("Error", "Please enter a group name.")
+            return
+        if not leader_display_name:
+            messagebox.showerror("Error", "Please select a group leader.")
+            return
+
+        # Find the user ID of the selected leader by their name and email combination
+        leader_id = self.user_display_mapping.get(leader_display_name)
+
+        # Debugging step to ensure leader ID was found
+        print(f"Leader ID found: {leader_id}")
+
+        if leader_id is None:
+            messagebox.showerror("Error", "Selected leader could not be found. Please try again.")
+            return
+
+        # Get the list of selected members
+        selected_members = [user_id for user_id, var in self.member_checkboxes.items() if var.get()]
+
+        # Check if there are selected members
+        if not selected_members:
+            messagebox.showerror("Error", "Please select at least one member for the group.")
+            return
+
+        # Create the group with members and the leader
+        group_id = db_connection.create_group_with_members(group_name, username, selected_members, leader_id)
+
+        if group_id:
+            messagebox.showinfo("Success", f"Group '{group_name}' created successfully.")
+            self.main_menu(username)
+        else:
+            messagebox.showerror("Error", "Failed to create the group. Please try again.")
 
 
     def manage_bills(self, username):

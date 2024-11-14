@@ -484,3 +484,122 @@ def get_group_transactions(group_id):
         # Close the connection if it was established
         if connection:
             connection.close()
+            
+def get_all_users():
+    """
+    Get the list of all users in the database.
+    Returns a list of users (user ID, name, email).
+    """
+    connection = None
+    try:
+        # Establish the database connection
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Query to get the list of all users
+        query = """
+            SELECT userid, name, email
+            FROM "IS150403"."User"
+        """
+
+        # Execute the query
+        cursor.execute(query)
+
+        # Fetch all results
+        users = cursor.fetchall()
+
+        # Return the list of users (each item is a tuple)
+        return users
+
+    except cx_Oracle.DatabaseError as e:
+        # Log or handle the database error
+        print("Database error:", e)
+        return []
+
+    finally:
+        # Close the connection if it was established
+        if connection:
+            connection.close()
+
+def create_group_with_members(group_name, created_by_userid, members, leader_id):
+    """
+    Creates a new group in the Group table and assigns members to it.
+    Returns the group ID of the created group.
+    :param group_name: Name of the group
+    :param created_by_userid: User ID of the person creating the group
+    :param members: List of user IDs to be added to the group
+    :param leader_id: User ID of the leader of the group
+    """
+    connection = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Insert new group into Group table
+        query = """
+            INSERT INTO "Group" (groupid, name, createddate, status)
+            VALUES (GROUP_SEQ.NEXTVAL, :group_name, SYSDATE, 'active')
+            RETURNING groupid INTO :group_id
+        """
+        group_id_var = cursor.var(cx_Oracle.NUMBER)
+        cursor.execute(query, {"group_name": group_name, "group_id": group_id_var})
+        connection.commit()
+
+        # Retrieve the generated group ID
+        group_id = group_id_var.getvalue()[0]
+
+        # Assign the creating user as the group leader in the user_group table
+        for member_id in members:
+            is_leader = 'Y' if member_id == leader_id else 'N'
+            cursor.execute("""
+                INSERT INTO user_group (userid, groupid, status, debt_status, isleader)
+                VALUES (:user_id, :group_id, 'active', 'No debt', :is_leader)
+            """, {"user_id": member_id, "group_id": group_id, "is_leader": is_leader})
+        connection.commit()
+
+        return group_id
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+        return None
+
+    finally:
+        if connection:
+            connection.close()
+
+def update_group_members(group_id, members, leader_id):
+    """
+    Updates the members of an existing group.
+    :param group_id: ID of the group to update
+    :param members: List of user IDs to be added to the group
+    :param leader_id: User ID of the leader of the group
+    """
+    connection = None
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # Remove existing members
+        cursor.execute("""
+            DELETE FROM user_group
+            WHERE groupid = :group_id
+        """, {"group_id": group_id})
+
+        # Add new members
+        for member_id in members:
+            is_leader = 'Y' if member_id == leader_id else 'N'
+            cursor.execute("""
+                INSERT INTO user_group (userid, groupid, status, debt_status, isleader)
+                VALUES (:user_id, :group_id, 'active', 'No debt', :is_leader)
+            """, {"user_id": member_id, "group_id": group_id, "is_leader": is_leader})
+        connection.commit()
+
+        print(f"Group {group_id} members updated successfully.")
+
+    except cx_Oracle.DatabaseError as e:
+        print("Database error:", e)
+
+    finally:
+        if connection:
+            connection.close()
+
