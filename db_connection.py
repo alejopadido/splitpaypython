@@ -2,9 +2,9 @@ import os
 import cx_Oracle
 
 # Add Oracle Instant Client path to environment variable
-#os.environ["PATH"] = r"C:\Users\alejo\dev\instantclient_23_6;" + os.environ["PATH"] #Alejo
-os.environ["PATH"] = r"D:\sebastian\DESARROLLO\instantclient_23_6;" + os.environ["PATH"] #Sebas
-
+# os.environ["PATH"] = r"/Users/alejoparrado/Dev/instantclient-basic-windows.x64-23.6.0.24.10/instantclient_23_6;" + os.environ["PATH"] #Alejo
+# os.environ["PATH"] = r"D:\sebastian\DESARROLLO\instantclient_23_6;" + os.environ["PATH"] #Sebas
+cx_Oracle.init_oracle_client(lib_dir="/Users/alejoparrado/Downloads/instantclient_19_16")
 
 # Database connection settings
 HOST = "orion.javeriana.edu.co"

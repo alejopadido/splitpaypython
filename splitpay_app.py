@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import filedialog
 import db_connection
-import cx_Oracle
 
 class SplitPayApp:
     def __init__(self, root):
